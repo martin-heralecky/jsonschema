@@ -1,0 +1,28 @@
+{
+    "name": "martin-heralecky/jsonschema",
+    "type": "library",
+    "require": {
+        "php": "^8.0"
+    },
+    "require-dev": {
+        "ext-xdebug": "^3",
+        "phpstan/phpstan": "^1.5",
+        "phpunit/phpunit": "^9.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "MartinHeralecky\\Jsonschema\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "MartinHeralecky\\Jsonschema\\Tests\\": "tests/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Martin Heralecký",
+            "email": "heralecky.martin@gmail.com"
+        }
+    ]
+}
