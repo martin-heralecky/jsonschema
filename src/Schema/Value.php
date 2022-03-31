@@ -2,10 +2,10 @@
 
 namespace MartinHeralecky\Jsonschema\Schema;
 
-class Value
+abstract class Value
 {
     public function __construct(
-        private ?string $description,
+        private ?string $description = null,
     ) {
     }
 

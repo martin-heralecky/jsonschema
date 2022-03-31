@@ -114,7 +114,7 @@ class JsonSchemaGenerator
             $json["required"]   = [];
 
             foreach ($val->getProperties() as $property) {
-                $json[$property->getName()] = $this->generateValue($property->getValue());
+                $json["properties"][$property->getName()] = $this->generateValue($property->getValue());
                 if ($property->isRequired()) {
                     $json["required"][] = $property->getName();
                 }

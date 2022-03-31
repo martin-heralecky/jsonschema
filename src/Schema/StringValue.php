@@ -8,10 +8,10 @@ class StringValue extends Value
      * @param string[] $examples
      */
     public function __construct(
-        ?string         $description,
-        private ?string $default,
-        private array   $examples,
-        private ?string $pattern,
+        ?string         $description = null,
+        private ?string $default = null,
+        private array   $examples = [],
+        private ?string $pattern = null,
     ) {
         parent::__construct($description);
     }

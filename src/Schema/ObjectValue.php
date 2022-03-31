@@ -8,10 +8,10 @@ class ObjectValue extends Value
      * @param ObjectValueProperty[] $properties
      */
     public function __construct(
-        ?string       $description,
+        ?string       $description = null,
 //        private       $default, todo
 //        private array $examples, todo
-        private array $properties,
+        private array $properties = [],
     ) {
         parent::__construct($description);
     }

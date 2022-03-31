@@ -8,11 +8,11 @@ class IntegerValue extends Value
      * @param int[] $examples
      */
     public function __construct(
-        ?string       $description,
-        private ?int  $default,
-        private array $examples,
-        private ?int  $minimum,
-        private ?int  $maximum,
+        ?string       $description = null,
+        private ?int  $default = null,
+        private array $examples = [],
+        private ?int  $minimum = null,
+        private ?int  $maximum = null,
     ) {
         parent::__construct($description);
     }
