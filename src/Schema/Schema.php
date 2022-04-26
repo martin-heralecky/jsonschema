@@ -2,21 +2,48 @@
 
 namespace MartinHeralecky\Jsonschema\Schema;
 
-class Schema
-{
-    public function __construct(
-        private Value   $value,
-        private ?string $title = null,
-    ) {
-    }
+use MartinHeralecky\Jsonschema\Value;
 
-    public function getValue(): Value
-    {
-        return $this->value;
+/**
+ * @template T
+ */
+abstract class Schema
+{
+    /**
+     * @param Value<T>|null $default
+     * @param T[]           $examples
+     */
+    public function __construct(
+        private ?string $title = null,
+        private ?string $description = null,
+        private ?Value  $default = null,
+        private array   $examples = [],
+    ) {
     }
 
     public function getTitle(): ?string
     {
         return $this->title;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    /**
+     * @return Value<T>|null
+     */
+    public function getDefault(): ?Value
+    {
+        return $this->default;
+    }
+
+    /**
+     * @return T[]
+     */
+    public function getExamples(): array
+    {
+        return $this->examples;
     }
 }
