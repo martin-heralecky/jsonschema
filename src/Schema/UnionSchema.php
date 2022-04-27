@@ -19,8 +19,9 @@ class UnionSchema extends Schema
         ?string       $description = null,
         ?Value        $default = null,
         array         $examples = [],
+        array         $enumValues = [],
     ) {
-        parent::__construct($title, $description, $default, $examples);
+        parent::__construct($title, $description, $default, $examples, $enumValues);
     }
 
     /**
