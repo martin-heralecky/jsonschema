@@ -3,120 +3,100 @@
 namespace MartinHeralecky\Jsonschema;
 
 use InvalidArgumentException;
-use MartinHeralecky\Jsonschema\Schema\IntegerValue;
-use MartinHeralecky\Jsonschema\Schema\ObjectValue;
+use MartinHeralecky\Jsonschema\Schema\IntegerSchema;
+use MartinHeralecky\Jsonschema\Schema\ObjectSchema;
 use MartinHeralecky\Jsonschema\Schema\Schema;
-use MartinHeralecky\Jsonschema\Schema\StringValue;
-use MartinHeralecky\Jsonschema\Schema\Value;
+use MartinHeralecky\Jsonschema\Schema\StringSchema;
+use MartinHeralecky\Jsonschema\Schema\UnionSchema;
 
 class JsonSchemaGenerator
 {
-    public function generate(Schema $schema): array
+    public function generate(Schema $schema, bool $root = true): array
     {
-        $json = [
-            "\$schema" => "http://json-schema.org/draft-07/schema",
-        ];
+        $json = [];
+
+        if ($root) {
+            $json["\$schema"] = "http://json-schema.org/draft-07/schema";
+        }
 
         if ($schema->getTitle() !== null) {
             $json["title"] = $schema->getTitle();
         }
 
-        $val  = $schema->getValue();
-        $json += $this->generateValue($val);
+        if ($schema->getDescription() !== null) {
+            $json["description"] = $schema->getDescription();
+        }
+
+        if ($schema->getDefault() !== null) {
+            $json["default"] = $schema->getDefault()->getValue();
+        }
+
+        if (count($schema->getExamples()) > 0) {
+            $json["examples"] = $schema->getExamples();
+        }
+
+        if (count($schema->getEnumValues()) > 0) {
+            $json["enum"] = $schema->getEnumValues();
+        }
+
+        if ($schema instanceof IntegerSchema) {
+            $json += $this->generateIntegerSchema($schema);
+        } elseif ($schema instanceof StringSchema) {
+            $json += $this->generateStringSchema($schema);
+        } elseif ($schema instanceof ObjectSchema) {
+            $json += $this->generateObjectSchema($schema);
+        } elseif ($schema instanceof UnionSchema) {
+            $jsons = [];
+            foreach ($schema->getSchemas() as $schema) {
+                $jsons[] = $this->generate($schema);
+            }
+
+            $json["anyOf"] = $jsons;
+        } else {
+            throw new InvalidArgumentException("Unknown type of \$schema: " . get_class($schema));
+        }
 
         return $json;
     }
 
-    private function generateValue(Value $val): array
-    {
-        // todo visitor?
-
-        if ($val instanceof IntegerValue) {
-            return $this->generateIntegerValue($val);
-        } elseif ($val instanceof StringValue) {
-            return $this->generateStringValue($val);
-        } elseif ($val instanceof ObjectValue) {
-            return $this->generateObjectValue($val);
-        }
-
-        throw new InvalidArgumentException("Unrecognized type of \$val: " . get_class($val));
-    }
-
-    private function generateIntegerValue(IntegerValue $val): array
+    private function generateIntegerSchema(IntegerSchema $schema): array
     {
         $json = ["type" => "integer"];
 
-        if ($val->getDescription() !== null) {
-            $json["description"] = $val->getDescription();
+        if ($schema->getMinimum() !== null) {
+            $json["minimum"] = $schema->getMinimum();
         }
 
-        if ($val->getDefault() !== null) {
-            $json["default"] = $val->getDefault();
-        }
-
-        if (count($val->getExamples()) > 0) {
-            $json["examples"] = [];
-            foreach ($val->getExamples() as $example) {
-                $json["examples"][] = $example;
-            }
-        }
-
-        if ($val->getMinimum() !== null) {
-            $json["minimum"] = $val->getMinimum();
-        }
-
-        if ($val->getMaximum() !== null) {
-            $json["maximum"] = $val->getMaximum();
+        if ($schema->getMaximum() !== null) {
+            $json["maximum"] = $schema->getMaximum();
         }
 
         return $json;
     }
 
-    private function generateStringValue(StringValue $val): array
+    private function generateStringSchema(StringSchema $schema): array
     {
         $json = ["type" => "string"];
 
-        if ($val->getDescription() !== null) {
-            $json["description"] = $val->getDescription();
-        }
-
-        if ($val->getDefault() !== null) {
-            $json["default"] = $val->getDefault();
-        }
-
-        if (count($val->getExamples()) > 0) {
-            $json["examples"] = [];
-            foreach ($val->getExamples() as $example) {
-                $json["examples"][] = $example;
-            }
-        }
-
-        if ($val->getPattern() !== null) {
-            $json["pattern"] = $val->getPattern();
+        if ($schema->getPattern() !== null) {
+            $json["pattern"] = $schema->getPattern();
         }
 
         return $json;
     }
 
-    private function generateObjectValue(ObjectValue $val): array
+    private function generateObjectSchema(ObjectSchema $schema): array
     {
         $json = ["type" => "object"];
 
-        if ($val->getDescription() !== null) {
-            $json["description"] = $val->getDescription();
-        }
-
-        // todo default
-        // todo examples
-
-        if (count($val->getProperties()) > 0) {
+        if (count($schema->getProperties()) > 0) {
             $json["properties"] = [];
             $json["required"]   = [];
 
-            foreach ($val->getProperties() as $property) {
-                $json["properties"][$property->getName()] = $this->generateValue($property->getValue());
-                if ($property->isRequired()) {
-                    $json["required"][] = $property->getName();
+            foreach ($schema->getProperties() as $prop) {
+                $json["properties"][$prop->getName()] = $this->generate($prop->getSchema(), false);
+                if ($prop->getSchema()->getDefault() === null) {
+                    $json["required"][] = $prop->getName();
                 }
             }
         }
