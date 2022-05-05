@@ -48,7 +48,7 @@ class JsonSchemaGenerator
         } elseif ($schema instanceof UnionSchema) {
             $jsons = [];
             foreach ($schema->getSchemas() as $schema) {
-                $jsons[] = $this->generate($schema);
+                $jsons[] = $this->generate($schema, false);
             }
 
             $json["anyOf"] = $jsons;
