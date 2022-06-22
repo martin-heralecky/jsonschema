@@ -2,6 +2,7 @@
 
 namespace MartinHeralecky\Jsonschema\Tests\Unit;
 
+use Generator;
 use MartinHeralecky\Jsonschema\Attribute\Enum;
 use MartinHeralecky\Jsonschema\Attribute\Example;
 use MartinHeralecky\Jsonschema\Attribute\Max;
@@ -28,7 +29,7 @@ class IntrospectorTest extends TestCase
     {
         $class =
             new class {
-                public int                  $alfa;
+                public Generator                  $alfa;
                 public ?int                 $bravo;
                 public int|string           $charlie;
                 public int|null|string|bool $delta;
