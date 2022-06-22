@@ -3,7 +3,9 @@
 namespace MartinHeralecky\Jsonschema\Tests\Unit;
 
 use MartinHeralecky\Jsonschema\JsonSchemaGenerator;
+use MartinHeralecky\Jsonschema\Schema\BooleanSchema;
 use MartinHeralecky\Jsonschema\Schema\IntegerSchema;
+use MartinHeralecky\Jsonschema\Schema\NullSchema;
 use MartinHeralecky\Jsonschema\Schema\ObjectSchema;
 use MartinHeralecky\Jsonschema\Schema\ObjectSchemaProperty;
 use MartinHeralecky\Jsonschema\Schema\StringSchema;
@@ -69,5 +71,32 @@ class JsonSchemaGeneratorTest extends TestCase
         $this->assertSame("Another description.", $json["properties"]["bravo"]["description"]);
         $this->assertSame("string", $json["properties"]["bravo"]["properties"]["charlie"]["type"]);
         $this->assertSame(["bravo"], $json["required"]);
+    }
+
+    public function testBooleanSchema(): void
+    {
+        $schema = new BooleanSchema("My Title", "My description.", new Value(true), [false, true], []);
+        $json   = $this->gen->generate($schema);
+
+        $this->assertSame("boolean", $json["type"]);
+        $this->assertSame("My Title", $json["title"]);
+        $this->assertSame("My description.", $json["description"]);
+        $this->assertSame(true, $json["default"]);
+        $this->assertSame(false, $json["examples"][0]);
+        $this->assertSame(true, $json["examples"][1]);
+        $this->assertArrayNotHasKey("enum", $json);
+    }
+
+    public function testNullSchema(): void
+    {
+        $schema = new NullSchema("My Title", "My description.", new Value(null), [null], []);
+        $json   = $this->gen->generate($schema);
+
+        $this->assertSame("null", $json["type"]);
+        $this->assertSame("My Title", $json["title"]);
+        $this->assertSame("My description.", $json["description"]);
+        $this->assertSame(null, $json["default"]);
+        $this->assertSame(null, $json["examples"][0]);
+        $this->assertArrayNotHasKey("enum", $json);
     }
 }

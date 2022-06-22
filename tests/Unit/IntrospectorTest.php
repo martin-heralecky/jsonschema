@@ -7,6 +7,7 @@ use MartinHeralecky\Jsonschema\Attribute\Example;
 use MartinHeralecky\Jsonschema\Attribute\Max;
 use MartinHeralecky\Jsonschema\Attribute\Min;
 use MartinHeralecky\Jsonschema\Introspector;
+use MartinHeralecky\Jsonschema\Schema\BooleanSchema;
 use MartinHeralecky\Jsonschema\Schema\IntegerSchema;
 use MartinHeralecky\Jsonschema\Schema\NullSchema;
 use MartinHeralecky\Jsonschema\Schema\ObjectSchema;
@@ -27,10 +28,10 @@ class IntrospectorTest extends TestCase
     {
         $class =
             new class {
-                public int             $alfa;
-                public ?int            $bravo;
-                public int|string      $charlie;
-                public int|null|string $delta;
+                public int                  $alfa;
+                public ?int                 $bravo;
+                public int|string           $charlie;
+                public int|null|string|bool $delta;
             };
 
         $schema = $this->introspector->introspect($class::class);
@@ -57,6 +58,7 @@ class IntrospectorTest extends TestCase
         $this->assertInstanceOf(StringSchema::class, $prop->getSchemas()[0]);
         $this->assertInstanceOf(IntegerSchema::class, $prop->getSchemas()[1]);
         $this->assertInstanceOf(NullSchema::class, $prop->getSchemas()[2]);
+        $this->assertInstanceOf(BooleanSchema::class, $prop->getSchemas()[3]);
     }
 
     public function testPropertyDescription(): void
