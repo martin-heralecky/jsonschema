@@ -2,10 +2,15 @@
 
 namespace MartinHeralecky\Jsonschema\Tests\Unit;
 
+use Attribute;
+use DateTime;
+use MartinHeralecky\Jsonschema\Attribute\Cast;
 use MartinHeralecky\Jsonschema\Attribute\Enum;
 use MartinHeralecky\Jsonschema\Attribute\Example;
 use MartinHeralecky\Jsonschema\Attribute\Max;
 use MartinHeralecky\Jsonschema\Attribute\Min;
+use MartinHeralecky\Jsonschema\Caster;
+use MartinHeralecky\Jsonschema\Exception\CastException;
 use MartinHeralecky\Jsonschema\Introspector;
 use MartinHeralecky\Jsonschema\Schema\BooleanSchema;
 use MartinHeralecky\Jsonschema\Schema\IntegerSchema;
@@ -214,5 +219,64 @@ class IntrospectorTest extends TestCase
         $this->assertInstanceOf(IntegerSchema::class, $prop);
         $this->assertSame(10, $prop->getMinimum());
         $this->assertSame(20, $prop->getMaximum());
+    }
+
+    public function testCast(): void
+    {
+        $class =
+            new class {
+                #[DelayCaster]
+                public int $delay1 = 1000000; // ms, but in json it is in s
+
+                #[DateTimeCaster]
+                public int $since = 1000000;
+            };
+
+        $schema = $this->introspector->introspect($class::class);
+        $this->assertInstanceOf(ObjectSchema::class, $schema);
+    }
+}
+
+#[Attribute(Attribute::TARGET_PROPERTY)]
+class DelayCaster implements Caster
+{
+    public function jsonToPhp(mixed $json): int
+    {
+        if (!is_int($json)) {
+            throw new CastException();
+        }
+
+        return $json * 1000;
+    }
+
+    public function phpToJson(mixed $php): int
+    {
+        if (!is_int($php)) {
+            throw new CastException();
+        }
+
+        return (int)($php / 1000);
+    }
+}
+
+#[Attribute(Attribute::TARGET_PROPERTY)]
+class DateTimeCaster implements Caster
+{
+    public function jsonToPhp(mixed $json): DateTime
+    {
+        if (!is_string($json)) {
+            throw new CastException();
+        }
+
+        return new DateTime($json);
+    }
+
+    public function phpToJson(mixed $php): string
+    {
+        if (!($php instanceof DateTime)) {
+            throw new CastException();
+        }
+
+        return $php->format(DATE_ATOM);
     }
 }
