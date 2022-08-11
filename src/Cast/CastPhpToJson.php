@@ -4,13 +4,8 @@ namespace MartinHeralecky\Jsonschema\Cast;
 
 use MartinHeralecky\Jsonschema\Exception\CastException;
 
-interface Cast
+interface CastPhpToJson
 {
-    /**
-     * @throws CastException
-     */
-    public function jsonToPhp(mixed $json): mixed;
-
     /**
      * @throws CastException
      */

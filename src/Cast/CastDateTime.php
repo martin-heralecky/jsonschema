@@ -7,7 +7,7 @@ use DateTime;
 use MartinHeralecky\Jsonschema\Exception\CastException;
 
 #[Attribute(Attribute::TARGET_PROPERTY)]
-class CastDateTime implements Cast
+class CastDateTime implements CastJsonToPhp, CastPhpToJson
 {
     public function jsonToPhp(mixed $json): DateTime
     {

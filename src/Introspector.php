@@ -66,7 +66,7 @@ class Introspector
         $properties = [];
         foreach ($rc->getProperties() as $prop) {
             $propSchema   = $this->introspectProperty($prop);
-            $properties[] = new ObjectSchemaProperty($this->getPropertyName($prop), $propSchema);
+            $properties[] = new ObjectSchemaProperty($this->getPropertyName($prop), $prop->getName(), $propSchema);
         }
 
         return new ObjectSchema($title, $description, $properties);

@@ -2,6 +2,8 @@
 
 namespace MartinHeralecky\Jsonschema\Schema;
 
+use MartinHeralecky\Jsonschema\Cast\CastJsonToPhp;
+use MartinHeralecky\Jsonschema\Cast\CastPhpToJson;
 use MartinHeralecky\Jsonschema\Value;
 
 /**
@@ -15,11 +17,13 @@ abstract class Schema
      * @param T[]           $enumValues
      */
     public function __construct(
-        private ?string $title = null,
-        private ?string $description = null,
-        private ?Value  $default = null,
-        private array   $examples = [],
-        private array   $enumValues = [],
+        private ?string        $title = null,
+        private ?string        $description = null,
+        private ?Value         $default = null,
+        private array          $examples = [],
+        private array          $enumValues = [],
+        private ?CastJsonToPhp $castJsonToPhp = null,
+        private ?CastPhpToJson $castPhpToJson = null,
     ) {
     }
 
@@ -55,5 +59,15 @@ abstract class Schema
     public function getEnumValues(): array
     {
         return $this->enumValues;
+    }
+
+    public function getCastJsonToPhp(): ?CastJsonToPhp
+    {
+        return $this->castJsonToPhp;
+    }
+
+    public function getCastPhpToJson(): ?CastPhpToJson
+    {
+        return $this->castPhpToJson;
     }
 }

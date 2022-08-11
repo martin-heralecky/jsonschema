@@ -9,6 +9,7 @@ class ObjectSchemaProperty
     // todo zamyslet se jestli je phpName potreba
     public function __construct(
         private string $name,
+        private string $phpName,
         private Schema $schema,
     ) {
     }
@@ -16,6 +17,11 @@ class ObjectSchemaProperty
     public function getName(): string
     {
         return $this->name;
+    }
+
+    public function getPhpName(): string
+    {
+        return $this->phpName;
     }
 
     public function getSchema(): Schema
