@@ -4,6 +4,8 @@ byt prepsany #[Name()], takze by se mi hodilo vedet jejich puvodni realny
 nazev v PHP, abych pak mohl tento PHP objekt sestavit). sestavovani ale bude
 zvlast - muze byt spousta zpusobu jak objekt sestavovat - ctorem, setterama
 
+toto uz neplati, protoze by se to blbe pouzivalo v phpku. radsi at v PHP je typ co se snadno pouziva v phpku a pres
+#[Type()] nebo #[Schema()] se rekne jak to ma vypadat v jsonu
 // todo a  /** @var int bla. */ public int $bravo = 123;  se teda treatuje jako zkratka pro:
 ///**
 // * bla.

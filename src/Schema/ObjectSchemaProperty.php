@@ -4,6 +4,9 @@ namespace MartinHeralecky\Jsonschema\Schema;
 
 class ObjectSchemaProperty
 {
+    // ve skutecnosti nepotrbuju phpName protoze v Instantiatoru muzu zase projit anotace. mozna je to ale blbost,
+    // protoze nechci anotace prochazet dvakrat a navic schema mohlo byt vytvoreno jinak nez anotacema.
+    // todo zamyslet se jestli je phpName potreba
     public function __construct(
         private string $name,
         private Schema $schema,

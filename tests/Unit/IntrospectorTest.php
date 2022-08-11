@@ -2,11 +2,15 @@
 
 namespace MartinHeralecky\Jsonschema\Tests\Unit;
 
+use DateTime;
 use Generator;
+use MartinHeralecky\Jsonschema\Attribute\DefaultValue;
 use MartinHeralecky\Jsonschema\Attribute\Enum;
 use MartinHeralecky\Jsonschema\Attribute\Example;
 use MartinHeralecky\Jsonschema\Attribute\Max;
 use MartinHeralecky\Jsonschema\Attribute\Min;
+use MartinHeralecky\Jsonschema\Attribute\Type;
+use MartinHeralecky\Jsonschema\Cast\CastDateTime;
 use MartinHeralecky\Jsonschema\Introspector;
 use MartinHeralecky\Jsonschema\Schema\BooleanSchema;
 use MartinHeralecky\Jsonschema\Schema\IntegerSchema;
@@ -215,5 +219,37 @@ class IntrospectorTest extends TestCase
         $this->assertInstanceOf(IntegerSchema::class, $prop);
         $this->assertSame(10, $prop->getMinimum());
         $this->assertSame(20, $prop->getMaximum());
+    }
+
+    public function testType(): void
+    {
+        $class =
+            new class {
+                #[Type("string")]
+                public int $alfa;
+            };
+
+        $schema = $this->introspector->introspect($class::class);
+        $this->assertInstanceOf(StringSchema::class, $schema);
+    }
+
+
+    public function testCast(): void
+    {
+        $class =
+            new class {
+//                #[DelayCast]
+//                public int $delay1 = 1000000; // ms, but in json it is in s
+
+//                #[DefaultValue("2022-08-26")] // todo mohlo by zjistit ze je to v jsonu a castnout to do phpka
+
+                #[Type("string")]
+                #[CastDateTime] // todo mozna by mel byt implicitni pri DateTime typu. at to jde vypnout ale v nastaveni
+                #[DefaultValue(new DateTime("now"))]
+                public DateTime $alfa;
+            };
+
+        $schema = $this->introspector->introspect($class::class);
+        $this->assertInstanceOf(ObjectSchema::class, $schema);
     }
 }

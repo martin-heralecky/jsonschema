@@ -18,6 +18,8 @@ use Traversable;
 /**
  * Among other things, encapsulates merging PHP type information with information in PHPDoc.
  *
+ * @todo mozna pujde zrusit, protoze proste beru typ z phpdocu - pokud existuje phpdoc, tak ignoruju php typ - zadny
+ *       slozity mergovani
  * @internal
  */
 class TypeParser
