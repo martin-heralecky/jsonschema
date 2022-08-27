@@ -4,6 +4,7 @@ namespace MartinHeralecky\Jsonschema;
 
 use MartinHeralecky\Jsonschema\Attribute;
 use MartinHeralecky\Jsonschema\Exception\IntrospectionException;
+use MartinHeralecky\Jsonschema\Exception\UnknownTypeException;
 use MartinHeralecky\Jsonschema\Schema\BooleanSchema;
 use MartinHeralecky\Jsonschema\Schema\IntegerSchema;
 use MartinHeralecky\Jsonschema\Schema\NullSchema;
@@ -13,6 +14,7 @@ use MartinHeralecky\Jsonschema\Schema\Schema;
 use MartinHeralecky\Jsonschema\Schema\StringSchema;
 use MartinHeralecky\Jsonschema\Schema\UnionSchema;
 use MartinHeralecky\Jsonschema\TypeParser\Type\AtomicType;
+use MartinHeralecky\Jsonschema\TypeParser\Type\Type;
 use MartinHeralecky\Jsonschema\TypeParser\Type\UnionType;
 use MartinHeralecky\Jsonschema\TypeParser\TypeParser;
 use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocChildNode;
@@ -64,7 +66,7 @@ class Introspector
      */
     private function introspectProperty(ReflectionProperty $prop): Schema
     {
-        $type = $this->typeParser->parseProperty($prop);
+        $type = $this->getPropertyType($prop);
 
         $title = $this->getPropertyTitle($prop);
         $description = $this->getPropertyDescription($prop);
@@ -135,6 +137,19 @@ class Introspector
     private function getPropertyName(ReflectionProperty $prop): string
     {
         return $this->getAttribute($prop, Attribute\Name::class)?->getName() ?? $prop->getName();
+    }
+
+    /**
+     * @throws UnknownTypeException
+     */
+    private function getPropertyType(ReflectionProperty $prop): Type
+    {
+        $typeAttr = $this->getAttribute($prop, Attribute\Type::class);
+        if ($typeAttr !== null) {
+            return new AtomicType($typeAttr->getType());
+        }
+
+        return $this->typeParser->parseProperty($prop);
     }
 
     private function getPropertyTitle(ReflectionProperty $prop): ?string

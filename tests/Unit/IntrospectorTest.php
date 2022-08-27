@@ -6,6 +6,8 @@ use MartinHeralecky\Jsonschema\Attribute\Enum;
 use MartinHeralecky\Jsonschema\Attribute\Example;
 use MartinHeralecky\Jsonschema\Attribute\Max;
 use MartinHeralecky\Jsonschema\Attribute\Min;
+use MartinHeralecky\Jsonschema\Attribute\Name;
+use MartinHeralecky\Jsonschema\Attribute\Type;
 use MartinHeralecky\Jsonschema\Introspector;
 use MartinHeralecky\Jsonschema\Schema\BooleanSchema;
 use MartinHeralecky\Jsonschema\Schema\IntegerSchema;
@@ -13,6 +15,7 @@ use MartinHeralecky\Jsonschema\Schema\NullSchema;
 use MartinHeralecky\Jsonschema\Schema\ObjectSchema;
 use MartinHeralecky\Jsonschema\Schema\StringSchema;
 use MartinHeralecky\Jsonschema\Schema\UnionSchema;
+use MartinHeralecky\Jsonschema\TypeParser\TypeParser;
 use PHPUnit\Framework\TestCase;
 
 class IntrospectorTest extends TestCase
@@ -21,44 +24,65 @@ class IntrospectorTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->introspector = new Introspector();
+        $this->introspector = new Introspector(new TypeParser());
+    }
+
+    public function testPropertyName(): void
+    {
+        $class =
+            new class {
+                public int $alfa;
+
+                #[Name("notBravo")]
+                public int $bravo;
+            };
+
+        $schema = $this->introspector->introspect($class::class);
+        $this->assertInstanceOf(ObjectSchema::class, $schema);
+
+        $this->assertSame("alfa", $schema->getProperties()[0]->getPhpName());
+        $this->assertSame("alfa", $schema->getProperties()[0]->getName());
+        $this->assertSame("bravo", $schema->getProperties()[1]->getPhpName());
+        $this->assertSame("notBravo", $schema->getProperties()[1]->getName());
     }
 
     public function testPropertyType(): void
     {
         $class =
             new class {
-                public int                  $alfa;
-                public ?int                 $bravo;
-                public int|string           $charlie;
+                public int $alfa;
+                public ?int $bravo;
+                public int|string $charlie;
                 public int|null|string|bool $delta;
+
+                #[Type("string")]
+                public int $echo;
             };
 
         $schema = $this->introspector->introspect($class::class);
         $this->assertInstanceOf(ObjectSchema::class, $schema);
 
-        $this->assertSame("alfa", $schema->getProperties()[0]->getName());
         $this->assertInstanceOf(IntegerSchema::class, $schema->getProperties()[0]->getSchema());
 
-        $this->assertSame("bravo", $schema->getProperties()[1]->getName());
         $prop = $schema->getProperties()[1]->getSchema();
         $this->assertInstanceOf(UnionSchema::class, $prop);
         $this->assertInstanceOf(IntegerSchema::class, $prop->getSchemas()[0]);
         $this->assertInstanceOf(NullSchema::class, $prop->getSchemas()[1]);
 
-        $this->assertSame("charlie", $schema->getProperties()[2]->getName());
         $prop = $schema->getProperties()[2]->getSchema();
         $this->assertInstanceOf(UnionSchema::class, $prop);
         $this->assertInstanceOf(StringSchema::class, $prop->getSchemas()[0]);
         $this->assertInstanceOf(IntegerSchema::class, $prop->getSchemas()[1]);
 
-        $this->assertSame("delta", $schema->getProperties()[3]->getName());
         $prop = $schema->getProperties()[3]->getSchema();
         $this->assertInstanceOf(UnionSchema::class, $prop);
         $this->assertInstanceOf(StringSchema::class, $prop->getSchemas()[0]);
         $this->assertInstanceOf(IntegerSchema::class, $prop->getSchemas()[1]);
-        $this->assertInstanceOf(NullSchema::class, $prop->getSchemas()[2]);
-        $this->assertInstanceOf(BooleanSchema::class, $prop->getSchemas()[3]);
+        $this->assertInstanceOf(BooleanSchema::class, $prop->getSchemas()[2]);
+        $this->assertInstanceOf(NullSchema::class, $prop->getSchemas()[3]);
+
+        $prop = $schema->getProperties()[4]->getSchema();
+        $this->assertInstanceOf(StringSchema::class, $prop);
     }
 
     public function testPropertyDescription(): void
@@ -82,7 +106,7 @@ class IntrospectorTest extends TestCase
                 /** @var int */
                 public int $delta;
 
-                public int $epsilon;
+                public int $echo;
             };
 
         $schema = $this->introspector->introspect($class::class);
@@ -144,21 +168,21 @@ class IntrospectorTest extends TestCase
     {
         $class =
             new class {
-                public int  $alfa;
+                public int $alfa;
                 public ?int $bravo;
-                public int  $charlie = 10;
-                public ?int $delta   = 10;
-                public ?int $echo    = null;
+                public int $charlie = 10;
+                public ?int $delta = 10;
+                public ?int $echo = null;
             };
 
         $schema = $this->introspector->introspect($class::class);
         $this->assertInstanceOf(ObjectSchema::class, $schema);
 
-        $this->assertNull($schema->getProperties()[0]->getSchema()->getDefault());
-        $this->assertNull($schema->getProperties()[1]->getSchema()->getDefault());
+        $this->assertSame(null, $schema->getProperties()[0]->getSchema()->getDefault());
+        $this->assertSame(null, $schema->getProperties()[1]->getSchema()->getDefault());
         $this->assertSame(10, $schema->getProperties()[2]->getSchema()->getDefault()->getValue());
         $this->assertSame(10, $schema->getProperties()[3]->getSchema()->getDefault()->getValue());
-        $this->assertNull($schema->getProperties()[4]->getSchema()->getDefault()->getValue());
+        $this->assertSame(null, $schema->getProperties()[4]->getSchema()->getDefault()->getValue());
     }
 
     public function testPropertyExamples(): void
