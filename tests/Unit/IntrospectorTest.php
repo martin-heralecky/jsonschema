@@ -3,6 +3,7 @@
 namespace MartinHeralecky\Jsonschema\Tests\Unit;
 
 use DateTime;
+use MartinHeralecky\Jsonschema\Attribute\DefaultValue;
 use MartinHeralecky\Jsonschema\Attribute\Enum;
 use MartinHeralecky\Jsonschema\Attribute\Example;
 use MartinHeralecky\Jsonschema\Attribute\Max;
@@ -175,6 +176,15 @@ class IntrospectorTest extends TestCase
                 public int $charlie = 10;
                 public ?int $delta = 10;
                 public ?int $echo = null;
+
+                #[DefaultValue(10)]
+                public int $foxtrot;
+
+                #[DefaultValue("golf default")]
+                public int $golf = 10;
+
+                #[DefaultValue(null)]
+                public int $hotel;
             };
 
         $schema = $this->introspector->introspect($class::class);
@@ -185,6 +195,9 @@ class IntrospectorTest extends TestCase
         $this->assertSame(10, $schema->getProperties()[2]->getSchema()->getDefault()->getValue());
         $this->assertSame(10, $schema->getProperties()[3]->getSchema()->getDefault()->getValue());
         $this->assertSame(null, $schema->getProperties()[4]->getSchema()->getDefault()->getValue());
+        $this->assertSame(10, $schema->getProperties()[5]->getSchema()->getDefault()->getValue());
+        $this->assertSame("golf default", $schema->getProperties()[6]->getSchema()->getDefault()->getValue());
+        $this->assertSame(null, $schema->getProperties()[7]->getSchema()->getDefault()->getValue());
     }
 
     public function testPropertyExamples(): void

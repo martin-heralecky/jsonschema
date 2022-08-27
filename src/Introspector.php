@@ -268,7 +268,7 @@ class Introspector
     {
         $defaultAttr = $this->getAttribute($prop, Attribute\DefaultValue::class);
         if ($defaultAttr !== null) {
-            return new Value($defaultAttr->getValue());
+            return new Value($defaultAttr->getDefault());
         }
 
         if ($prop->hasDefaultValue()) {
