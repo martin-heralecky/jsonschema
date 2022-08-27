@@ -2,12 +2,14 @@
 
 namespace MartinHeralecky\Jsonschema\Tests\Unit;
 
+use DateTime;
 use MartinHeralecky\Jsonschema\Attribute\Enum;
 use MartinHeralecky\Jsonschema\Attribute\Example;
 use MartinHeralecky\Jsonschema\Attribute\Max;
 use MartinHeralecky\Jsonschema\Attribute\Min;
 use MartinHeralecky\Jsonschema\Attribute\Name;
 use MartinHeralecky\Jsonschema\Attribute\Type;
+use MartinHeralecky\Jsonschema\Cast\DateTimeCast;
 use MartinHeralecky\Jsonschema\Introspector;
 use MartinHeralecky\Jsonschema\Schema\BooleanSchema;
 use MartinHeralecky\Jsonschema\Schema\IntegerSchema;
@@ -238,5 +240,22 @@ class IntrospectorTest extends TestCase
         $this->assertInstanceOf(IntegerSchema::class, $prop);
         $this->assertSame(10, $prop->getMinimum());
         $this->assertSame(20, $prop->getMaximum());
+    }
+
+    public function testPropertyCast(): void
+    {
+        $class =
+            new class {
+                #[Type("string")]
+                #[DateTimeCast]
+                public DateTime $alfa;
+            };
+
+        $schema = $this->introspector->introspect($class::class);
+        $this->assertInstanceOf(ObjectSchema::class, $schema);
+
+        $prop = $schema->getProperties()[0]->getSchema();
+        $this->assertInstanceOf(DateTimeCast::class, $prop->getJsonToPhpCast());
+        $this->assertInstanceOf(DateTimeCast::class, $prop->getPhpToJsonCast());
     }
 }

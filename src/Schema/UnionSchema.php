@@ -2,6 +2,8 @@
 
 namespace MartinHeralecky\Jsonschema\Schema;
 
+use MartinHeralecky\Jsonschema\Cast\JsonToPhpCast;
+use MartinHeralecky\Jsonschema\Cast\PhpToJsonCast;
 use MartinHeralecky\Jsonschema\Value;
 
 /**
@@ -15,13 +17,15 @@ class UnionSchema extends Schema
      */
     public function __construct(
         private array $schemas,
-        ?string       $title = null,
-        ?string       $description = null,
-        ?Value        $default = null,
-        array         $examples = [],
-        array         $enumValues = [],
+        ?string $title = null,
+        ?string $description = null,
+        ?Value $default = null,
+        array $examples = [],
+        array $enumValues = [],
+        ?JsonToPhpCast $jsonToPhpCast = null,
+        ?PhpToJsonCast $phpToJsonCast = null,
     ) {
-        parent::__construct($title, $description, $default, $examples, $enumValues);
+        parent::__construct($title, $description, $default, $examples, $enumValues, $jsonToPhpCast, $phpToJsonCast);
     }
 
     /**

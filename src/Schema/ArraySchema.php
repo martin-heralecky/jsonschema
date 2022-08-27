@@ -2,6 +2,8 @@
 
 namespace MartinHeralecky\Jsonschema\Schema;
 
+use MartinHeralecky\Jsonschema\Cast\JsonToPhpCast;
+use MartinHeralecky\Jsonschema\Cast\PhpToJsonCast;
 use MartinHeralecky\Jsonschema\Value;
 
 /**
@@ -21,8 +23,10 @@ class ArraySchema extends Schema
         ?Value $default = null,
         array $examples = [],
         array $enumValues = [],
+        ?JsonToPhpCast $jsonToPhpCast = null,
+        ?PhpToJsonCast $phpToJsonCast = null,
     ) {
-        parent::__construct($title, $description, $default, $examples, $enumValues);
+        parent::__construct($title, $description, $default, $examples, $enumValues, $jsonToPhpCast, $phpToJsonCast);
     }
 
     public function getItemSchema(): Schema

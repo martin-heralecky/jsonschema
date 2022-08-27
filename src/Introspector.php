@@ -3,6 +3,8 @@
 namespace MartinHeralecky\Jsonschema;
 
 use MartinHeralecky\Jsonschema\Attribute;
+use MartinHeralecky\Jsonschema\Cast\JsonToPhpCast;
+use MartinHeralecky\Jsonschema\Cast\PhpToJsonCast;
 use MartinHeralecky\Jsonschema\Exception\IntrospectionException;
 use MartinHeralecky\Jsonschema\Exception\UnknownTypeException;
 use MartinHeralecky\Jsonschema\Schema\BooleanSchema;
@@ -25,6 +27,7 @@ use PHPStan\PhpDocParser\Parser\ConstExprParser;
 use PHPStan\PhpDocParser\Parser\PhpDocParser;
 use PHPStan\PhpDocParser\Parser\TokenIterator;
 use PHPStan\PhpDocParser\Parser\TypeParser as PhpStanTypeParser;
+use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionProperty;
@@ -74,17 +77,39 @@ class Introspector
         $examples = $this->getPropertyExamples($prop);
         $enum = $this->getPropertyEnumValues($prop);
 
+        $jsonToPhpCast = $this->getAttribute($prop, JsonToPhpCast::class);
+        $phpToJsonCast = $this->getAttribute($prop, PhpToJsonCast::class);
+
         if ($type instanceof AtomicType) {
-            return $this->introspectAtomicPropertyType($type, $title, $description, $default, $examples, $enum, $prop);
+            return $this->introspectAtomicPropertyType(
+                $type,
+                $title,
+                $description,
+                $default,
+                $examples,
+                $enum,
+                $jsonToPhpCast,
+                $phpToJsonCast,
+                $prop,
+            );
         }
 
         if ($type instanceof UnionType) {
             $schemas = [];
             foreach ($type->getTypes() as $t) {
-                $schemas[] = $this->introspectAtomicPropertyType($t, null, null, null, [], [], $prop);
+                $schemas[] = $this->introspectAtomicPropertyType($t, null, null, null, [], [], null, null, $prop);
             }
 
-            return new UnionSchema($schemas, $title, $description, $default, $examples, $enum);
+            return new UnionSchema(
+                $schemas,
+                $title,
+                $description,
+                $default,
+                $examples,
+                $enum,
+                $jsonToPhpCast,
+                $phpToJsonCast,
+            );
         }
 
         throw new RuntimeException(sprintf(
@@ -105,6 +130,8 @@ class Introspector
         ?Value $default,
         array $examples,
         array $enumValues,
+        ?JsonToPhpCast $jsonToPhpCast,
+        ?PhpToJsonCast $phpToJsonCast,
         ReflectionProperty $prop,
     ): Schema {
         if ($type->getName() === "int") {
@@ -114,21 +141,47 @@ class Introspector
                 $default,
                 $examples,
                 $enumValues,
+                $jsonToPhpCast,
+                $phpToJsonCast,
                 $this->getAttribute($prop, Attribute\Min::class)?->getValue(),
                 $this->getAttribute($prop, Attribute\Max::class)?->getValue(),
             );
         }
 
         if ($type->getName() === "string") {
-            return new StringSchema($title, $description, $default, $examples, $enumValues);
+            return new StringSchema(
+                $title,
+                $description,
+                $default,
+                $examples,
+                $enumValues,
+                $jsonToPhpCast,
+                $phpToJsonCast,
+            );
         }
 
         if ($type->getName() === "bool") {
-            return new BooleanSchema($title, $description, $default, $examples, $enumValues);
+            return new BooleanSchema(
+                $title,
+                $description,
+                $default,
+                $examples,
+                $enumValues,
+                $jsonToPhpCast,
+                $phpToJsonCast,
+            );
         }
 
         if ($type->getName() === "null") {
-            return new NullSchema($title, $description, $default, $examples, $enumValues);
+            return new NullSchema(
+                $title,
+                $description,
+                $default,
+                $examples,
+                $enumValues,
+                $jsonToPhpCast,
+                $phpToJsonCast,
+            );
         }
 
         return $this->introspect($type->getName());
@@ -257,7 +310,7 @@ class Introspector
     {
         $attrs = [];
 
-        $refAttrs = $obj->getAttributes($attributeClass);
+        $refAttrs = $obj->getAttributes($attributeClass, ReflectionAttribute::IS_INSTANCEOF);
         foreach ($refAttrs as $refAttr) {
             $attrs[] = $refAttr->newInstance();
         }
