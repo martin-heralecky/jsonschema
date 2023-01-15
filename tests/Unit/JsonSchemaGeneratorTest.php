@@ -23,8 +23,8 @@ class JsonSchemaGeneratorTest extends TestCase
 
     public function testIntegerSchema(): void
     {
-        $schema = new IntegerSchema("My Title", "My description.", new Value(3), [1, 2], [], -5, 5);
-        $json   = $this->gen->generate($schema);
+        $schema = new IntegerSchema("My Title", "My description.", new Value(3), [1, 2], [], null, null, -5, 5);
+        $json = $this->gen->generate($schema);
 
         $this->assertSame("integer", $json["type"]);
         $this->assertSame("My Title", $json["title"]);
@@ -39,8 +39,8 @@ class JsonSchemaGeneratorTest extends TestCase
 
     public function testStringSchema(): void
     {
-        $schema = new StringSchema("My Title", "My description.", new Value("foo"), ["bar", "gee"], [], null);
-        $json   = $this->gen->generate($schema);
+        $schema = new StringSchema("My Title", "My description.", new Value("foo"), ["bar", "gee"]);
+        $json = $this->gen->generate($schema);
 
         $this->assertSame("string", $json["type"]);
         $this->assertSame("My Title", $json["title"]);
@@ -55,12 +55,12 @@ class JsonSchemaGeneratorTest extends TestCase
     public function testObjectSchema(): void
     {
         $schema = new ObjectSchema("My Title", "My description.", [
-            new ObjectSchemaProperty("alfa", new IntegerSchema(null, null, new Value(10))),
-            new ObjectSchemaProperty("bravo", new ObjectSchema("Another Title", "Another description.", [
-                new ObjectSchemaProperty("charlie", new StringSchema(null, null, new Value("def"))),
+            new ObjectSchemaProperty("alfa", "alfa", new IntegerSchema(null, null, new Value(10))),
+            new ObjectSchemaProperty("bravo", "bravo", new ObjectSchema("Another Title", "Another description.", [
+                new ObjectSchemaProperty("charlie", "charlie", new StringSchema(null, null, new Value("def"))),
             ])),
         ]);
-        $json   = $this->gen->generate($schema);
+        $json = $this->gen->generate($schema);
 
         $this->assertSame("object", $json["type"]);
         $this->assertSame("My Title", $json["title"]);
@@ -75,8 +75,8 @@ class JsonSchemaGeneratorTest extends TestCase
 
     public function testBooleanSchema(): void
     {
-        $schema = new BooleanSchema("My Title", "My description.", new Value(true), [false, true], []);
-        $json   = $this->gen->generate($schema);
+        $schema = new BooleanSchema("My Title", "My description.", new Value(true), [false, true]);
+        $json = $this->gen->generate($schema);
 
         $this->assertSame("boolean", $json["type"]);
         $this->assertSame("My Title", $json["title"]);
@@ -89,8 +89,8 @@ class JsonSchemaGeneratorTest extends TestCase
 
     public function testNullSchema(): void
     {
-        $schema = new NullSchema("My Title", "My description.", new Value(null), [null], []);
-        $json   = $this->gen->generate($schema);
+        $schema = new NullSchema("My Title", "My description.", new Value(null), [null]);
+        $json = $this->gen->generate($schema);
 
         $this->assertSame("null", $json["type"]);
         $this->assertSame("My Title", $json["title"]);

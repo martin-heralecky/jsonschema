@@ -97,7 +97,7 @@ class JsonSchemaGenerator
 
         if (count($schema->getProperties()) > 0) {
             $json["properties"] = [];
-            $json["required"]   = [];
+            $json["required"] = [];
 
             foreach ($schema->getProperties() as $prop) {
                 $json["properties"][$prop->getName()] = $this->generate($prop->getSchema(), false);
