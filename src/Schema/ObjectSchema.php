@@ -2,9 +2,10 @@
 
 namespace MartinHeralecky\Jsonschema\Schema;
 
-/**
- * @todo default, examples, enumValues
- */
+use MartinHeralecky\Jsonschema\Cast\JsonToPhpCast;
+use MartinHeralecky\Jsonschema\Cast\PhpToJsonCast;
+use MartinHeralecky\Jsonschema\Value;
+
 class ObjectSchema extends Schema
 {
     /**
@@ -14,8 +15,13 @@ class ObjectSchema extends Schema
         ?string $title = null,
         ?string $description = null,
         private readonly array $properties = [],
+        ?Value $default = null,
+        array $examples = [],
+        array $enumValues = [],
+        ?JsonToPhpCast $jsonToPhpCast = null,
+        ?PhpToJsonCast $phpToJsonCast = null,
     ) {
-        parent::__construct($title, $description);
+        parent::__construct($title, $description, $default, $examples, $enumValues, $jsonToPhpCast, $phpToJsonCast);
     }
 
     /**

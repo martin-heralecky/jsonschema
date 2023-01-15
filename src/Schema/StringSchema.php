@@ -11,11 +11,6 @@ use MartinHeralecky\Jsonschema\Value;
  */
 class StringSchema extends Schema
 {
-    /**
-     * @param Value<string>|null $default
-     * @param string[] $examples
-     * @param string[] $enumValues
-     */
     public function __construct(
         ?string $title = null,
         ?string $description = null,

@@ -13,7 +13,6 @@ class UnionSchema extends Schema
 {
     /**
      * @param Schema<mixed>[] $schemas
-     * @param Value<mixed>|null $default
      */
     public function __construct(
         private readonly array $schemas,

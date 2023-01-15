@@ -11,11 +11,6 @@ use MartinHeralecky\Jsonschema\Value;
  */
 class IntegerSchema extends Schema
 {
-    /**
-     * @param Value<int>|null $default
-     * @param int[] $examples
-     * @param int[] $enumValues
-     */
     public function __construct(
         ?string $title = null,
         ?string $description = null,
