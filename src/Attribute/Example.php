@@ -8,7 +8,7 @@ use Attribute;
 class Example
 {
     public function __construct(
-        private mixed $value,
+        private readonly mixed $value,
     ) {
     }
 

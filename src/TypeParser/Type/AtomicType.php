@@ -11,8 +11,8 @@ class AtomicType implements Type
      * @param Type[] $genericTypes
      */
     public function __construct(
-        private string $name,
-        private array $genericTypes = [],
+        private readonly string $name,
+        private readonly array $genericTypes = [],
     ) {
     }
 

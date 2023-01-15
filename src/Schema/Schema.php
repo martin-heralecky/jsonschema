@@ -13,17 +13,17 @@ abstract class Schema
 {
     /**
      * @param Value<T>|null $default
-     * @param T[]           $examples
-     * @param T[]           $enumValues
+     * @param T[] $examples
+     * @param T[] $enumValues
      */
     public function __construct(
-        private ?string $title = null,
-        private ?string $description = null,
-        private ?Value $default = null,
-        private array $examples = [],
-        private array $enumValues = [],
-        private ?JsonToPhpCast $jsonToPhpCast = null,
-        private ?PhpToJsonCast $phpToJsonCast = null,
+        private readonly ?string $title = null,
+        private readonly ?string $description = null,
+        private readonly ?Value $default = null,
+        private readonly array $examples = [],
+        private readonly array $enumValues = [],
+        private readonly ?JsonToPhpCast $jsonToPhpCast = null,
+        private readonly ?PhpToJsonCast $phpToJsonCast = null,
     ) {
     }
 

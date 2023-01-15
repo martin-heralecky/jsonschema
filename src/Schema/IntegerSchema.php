@@ -13,8 +13,8 @@ class IntegerSchema extends Schema
 {
     /**
      * @param Value<int>|null $default
-     * @param int[]           $examples
-     * @param int[]           $enumValues
+     * @param int[] $examples
+     * @param int[] $enumValues
      */
     public function __construct(
         ?string $title = null,
@@ -24,8 +24,8 @@ class IntegerSchema extends Schema
         array $enumValues = [],
         ?JsonToPhpCast $jsonToPhpCast = null,
         ?PhpToJsonCast $phpToJsonCast = null,
-        private ?int $minimum = null,
-        private ?int $maximum = null,
+        private readonly ?int $minimum = null,
+        private readonly ?int $maximum = null,
     ) {
         parent::__construct($title, $description, $default, $examples, $enumValues, $jsonToPhpCast, $phpToJsonCast);
     }

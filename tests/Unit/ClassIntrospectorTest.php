@@ -11,7 +11,7 @@ use MartinHeralecky\Jsonschema\Attribute\Min;
 use MartinHeralecky\Jsonschema\Attribute\Name;
 use MartinHeralecky\Jsonschema\Attribute\Type;
 use MartinHeralecky\Jsonschema\Cast\DateTimeCast;
-use MartinHeralecky\Jsonschema\Introspector;
+use MartinHeralecky\Jsonschema\Introspector\ClassIntrospector;
 use MartinHeralecky\Jsonschema\Schema\BooleanSchema;
 use MartinHeralecky\Jsonschema\Schema\IntegerSchema;
 use MartinHeralecky\Jsonschema\Schema\NullSchema;
@@ -21,13 +21,13 @@ use MartinHeralecky\Jsonschema\Schema\UnionSchema;
 use MartinHeralecky\Jsonschema\TypeParser\TypeParser;
 use PHPUnit\Framework\TestCase;
 
-class IntrospectorTest extends TestCase
+class ClassIntrospectorTest extends TestCase
 {
-    private Introspector $introspector;
+    private ClassIntrospector $introspector;
 
     protected function setUp(): void
     {
-        $this->introspector = new Introspector(new TypeParser());
+        $this->introspector = new ClassIntrospector(new TypeParser());
     }
 
     public function testPropertyName(): void

@@ -5,9 +5,9 @@ namespace MartinHeralecky\Jsonschema\Schema;
 class ObjectSchemaProperty
 {
     public function __construct(
-        private string $name,
-        private string $phpName,
-        private Schema $schema,
+        private readonly string $name,
+        private readonly string $phpName,
+        private readonly Schema $schema,
     ) {
     }
 

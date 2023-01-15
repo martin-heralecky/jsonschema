@@ -13,8 +13,8 @@ class MixedSchema extends Schema
 {
     /**
      * @param Value<mixed>|null $default
-     * @param mixed[]           $examples
-     * @param mixed[]           $enumValues
+     * @param mixed[] $examples
+     * @param mixed[] $enumValues
      */
     public function __construct(
         ?string $title = null,

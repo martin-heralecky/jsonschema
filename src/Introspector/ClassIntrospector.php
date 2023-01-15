@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace MartinHeralecky\Jsonschema;
+namespace MartinHeralecky\Jsonschema\Introspector;
 
 use MartinHeralecky\Jsonschema\Attribute;
 use MartinHeralecky\Jsonschema\Cast\JsonToPhpCast;
@@ -19,6 +19,7 @@ use MartinHeralecky\Jsonschema\TypeParser\Type\AtomicType;
 use MartinHeralecky\Jsonschema\TypeParser\Type\Type;
 use MartinHeralecky\Jsonschema\TypeParser\Type\UnionType;
 use MartinHeralecky\Jsonschema\TypeParser\TypeParser;
+use MartinHeralecky\Jsonschema\Value;
 use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocChildNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocTextNode;
@@ -33,7 +34,10 @@ use ReflectionException;
 use ReflectionProperty;
 use RuntimeException;
 
-class Introspector
+/**
+ * @todo Better name.
+ */
+class ClassIntrospector
 {
     public function __construct(
         private readonly TypeParser $typeParser,
@@ -52,7 +56,7 @@ class Introspector
             throw new IntrospectionException("Class does not exist: $class", previous: $e);
         }
 
-        $title = $this->getAttribute($rc, Attribute\Title::class)?->getTitle();
+        $title = $this->getAttribute($rc, Attribute\Title::class)?->getValue();
         $description = $this->getClassDescription($rc);
 
         $properties = [];
@@ -113,7 +117,7 @@ class Introspector
         }
 
         throw new RuntimeException(sprintf(
-            "Unknown type from TypeParser %s on %s::%s.",
+            "Unknown type %s on %s::%s.",
             $type::class,
             $prop->getDeclaringClass()->getName(),
             $prop->getName(),
@@ -189,7 +193,7 @@ class Introspector
 
     private function getPropertyName(ReflectionProperty $prop): string
     {
-        return $this->getAttribute($prop, Attribute\Name::class)?->getName() ?? $prop->getName();
+        return $this->getAttribute($prop, Attribute\Name::class)?->getValue() ?? $prop->getName();
     }
 
     /**
@@ -199,7 +203,7 @@ class Introspector
     {
         $typeAttr = $this->getAttribute($prop, Attribute\Type::class);
         if ($typeAttr !== null) {
-            return new AtomicType($typeAttr->getType());
+            return new AtomicType($typeAttr->getValue());
         }
 
         return $this->typeParser->parseProperty($prop);
@@ -207,7 +211,7 @@ class Introspector
 
     private function getPropertyTitle(ReflectionProperty $prop): ?string
     {
-        return $this->getAttribute($prop, Attribute\Title::class)?->getTitle();
+        return $this->getAttribute($prop, Attribute\Title::class)?->getValue();
     }
 
     private function getClassDescription(ReflectionClass $class): ?string
@@ -268,7 +272,7 @@ class Introspector
     {
         $defaultAttr = $this->getAttribute($prop, Attribute\DefaultValue::class);
         if ($defaultAttr !== null) {
-            return new Value($defaultAttr->getDefault());
+            return new Value($defaultAttr->getValue());
         }
 
         if ($prop->hasDefaultValue()) {
@@ -320,14 +324,14 @@ class Introspector
 
     private function parsePhpDocNode(string $phpDoc): PhpDocNode
     {
-        $docLexer = new Lexer();
+        $lexer = new Lexer();
 
-        $tokens = $docLexer->tokenize($phpDoc);
+        $tokens = $lexer->tokenize($phpDoc);
         $tokensIt = new TokenIterator($tokens);
 
         $constExprParser = new ConstExprParser();
-        $docParser = new PhpDocParser(new PhpStanTypeParser($constExprParser), $constExprParser);
+        $parser = new PhpDocParser(new PhpStanTypeParser($constExprParser), $constExprParser);
 
-        return $docParser->parse($tokensIt);
+        return $parser->parse($tokensIt);
     }
 }

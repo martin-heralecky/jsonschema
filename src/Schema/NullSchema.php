@@ -13,8 +13,8 @@ class NullSchema extends Schema
 {
     /**
      * @param Value<null>|null $default
-     * @param null[]           $examples
-     * @param null[]           $enumValues
+     * @param null[] $examples
+     * @param null[] $enumValues
      */
     public function __construct(
         ?string $title = null,

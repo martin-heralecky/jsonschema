@@ -8,7 +8,7 @@ use Attribute;
 class Enum
 {
     public function __construct(
-        private array $values,
+        private readonly array $values,
     ) {
     }
 

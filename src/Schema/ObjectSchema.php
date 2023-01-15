@@ -11,9 +11,9 @@ class ObjectSchema extends Schema
      * @param ObjectSchemaProperty[] $properties
      */
     public function __construct(
-        ?string       $title = null,
-        ?string       $description = null,
-        private array $properties = [],
+        ?string $title = null,
+        ?string $description = null,
+        private readonly array $properties = [],
     ) {
         parent::__construct($title, $description);
     }

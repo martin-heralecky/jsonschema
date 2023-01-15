@@ -8,12 +8,12 @@ use Attribute;
 class DefaultValue
 {
     public function __construct(
-        private mixed $default,
+        private readonly mixed $value,
     ) {
     }
 
-    public function getDefault(): mixed
+    public function getValue(): mixed
     {
-        return $this->default;
+        return $this->value;
     }
 }

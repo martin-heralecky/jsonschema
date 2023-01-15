@@ -13,8 +13,8 @@ class BooleanSchema extends Schema
 {
     /**
      * @param Value<bool>|null $default
-     * @param bool[]           $examples
-     * @param bool[]           $enumValues
+     * @param bool[] $examples
+     * @param bool[] $enumValues
      */
     public function __construct(
         ?string $title = null,

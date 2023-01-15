@@ -14,7 +14,7 @@ class Value
      * @param T $value
      */
     public function __construct(
-        private mixed $value,
+        private readonly mixed $value,
     ) {
     }
 

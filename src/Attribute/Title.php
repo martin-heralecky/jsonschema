@@ -8,12 +8,12 @@ use Attribute;
 class Title
 {
     public function __construct(
-        private string $title,
+        private readonly string $value,
     ) {
     }
 
-    public function getTitle(): string
+    public function getValue(): string
     {
-        return $this->title;
+        return $this->value;
     }
 }

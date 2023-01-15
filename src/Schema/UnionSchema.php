@@ -12,11 +12,11 @@ use MartinHeralecky\Jsonschema\Value;
 class UnionSchema extends Schema
 {
     /**
-     * @param Schema<mixed>[]   $schemas
+     * @param Schema<mixed>[] $schemas
      * @param Value<mixed>|null $default
      */
     public function __construct(
-        private array $schemas,
+        private readonly array $schemas,
         ?string $title = null,
         ?string $description = null,
         ?Value $default = null,

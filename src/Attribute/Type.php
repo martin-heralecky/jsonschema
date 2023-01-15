@@ -8,12 +8,12 @@ use Attribute;
 class Type
 {
     public function __construct(
-        private string $type,
+        private readonly string $value,
     ) {
     }
 
-    public function getType(): string
+    public function getValue(): string
     {
-        return $this->type;
+        return $this->value;
     }
 }

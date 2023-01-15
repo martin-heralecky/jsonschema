@@ -13,8 +13,8 @@ class StringSchema extends Schema
 {
     /**
      * @param Value<string>|null $default
-     * @param string[]           $examples
-     * @param string[]           $enumValues
+     * @param string[] $examples
+     * @param string[] $enumValues
      */
     public function __construct(
         ?string $title = null,
@@ -24,7 +24,7 @@ class StringSchema extends Schema
         array $enumValues = [],
         ?JsonToPhpCast $jsonToPhpCast = null,
         ?PhpToJsonCast $phpToJsonCast = null,
-        private ?string $pattern = null,
+        private readonly ?string $pattern = null,
     ) {
         parent::__construct($title, $description, $default, $examples, $enumValues, $jsonToPhpCast, $phpToJsonCast);
     }

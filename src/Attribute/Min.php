@@ -8,7 +8,7 @@ use Attribute;
 class Min
 {
     public function __construct(
-        private int|float $value,
+        private readonly int|float $value,
     ) {
     }
 

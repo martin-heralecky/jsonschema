@@ -11,7 +11,7 @@ class UnionType implements Type
      * @param Type[] $types
      */
     public function __construct(
-        private array $types,
+        private readonly array $types,
     ) {
     }
 
