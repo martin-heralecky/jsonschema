@@ -10,6 +10,9 @@
         </report>
     </coverage>
     <testsuites>
+        <testsuite name="integration">
+            <directory>Integration</directory>
+        </testsuite>
         <testsuite name="unit">
             <directory>Unit</directory>
         </testsuite>
