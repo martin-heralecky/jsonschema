@@ -65,7 +65,7 @@ class ClassIntrospector
             $properties[] = new ObjectSchemaProperty($this->getPropertyName($prop), $prop->getName(), $propSchema);
         }
 
-        return new ObjectSchema($title, $description, $properties);
+        return new ObjectSchema($title, $description, $class, $properties);
     }
 
     /**

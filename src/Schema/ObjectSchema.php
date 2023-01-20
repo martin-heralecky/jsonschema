@@ -9,11 +9,13 @@ use MartinHeralecky\Jsonschema\Value;
 class ObjectSchema extends Schema
 {
     /**
+     * @param class-string|null $phpClass
      * @param ObjectSchemaProperty[] $properties
      */
     public function __construct(
         ?string $title = null,
         ?string $description = null,
+        private readonly ?string $phpClass = null,
         private readonly array $properties = [],
         ?Value $default = null,
         array $examples = [],
@@ -22,6 +24,14 @@ class ObjectSchema extends Schema
         ?PhpToJsonCast $phpToJsonCast = null,
     ) {
         parent::__construct($title, $description, $default, $examples, $enumValues, $jsonToPhpCast, $phpToJsonCast);
+    }
+
+    /**
+     * @return class-string|null
+     */
+    public function getPhpClass(): ?string
+    {
+        return $this->phpClass;
     }
 
     /**

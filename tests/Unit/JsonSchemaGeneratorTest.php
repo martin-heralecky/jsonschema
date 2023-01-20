@@ -54,9 +54,9 @@ class JsonSchemaGeneratorTest extends TestCase
 
     public function testObjectSchema(): void
     {
-        $schema = new ObjectSchema("My Title", "My description.", [
+        $schema = new ObjectSchema("My Title", "My description.", null, [
             new ObjectSchemaProperty("alfa", "alfa", new IntegerSchema(null, null, new Value(10))),
-            new ObjectSchemaProperty("bravo", "bravo", new ObjectSchema("Another Title", "Another description.", [
+            new ObjectSchemaProperty("bravo", "bravo", new ObjectSchema("Another Title", "Another description.", null, [
                 new ObjectSchemaProperty("charlie", "charlie", new StringSchema(null, null, new Value("def"))),
             ])),
         ]);
