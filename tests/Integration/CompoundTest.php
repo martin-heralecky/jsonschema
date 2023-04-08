@@ -4,8 +4,8 @@ namespace MartinHeralecky\Jsonschema\Tests\Integration;
 
 use MartinHeralecky\Jsonschema\Instantiator\PublicPropertySetInstantiator;
 use MartinHeralecky\Jsonschema\Introspector\ClassIntrospector;
+use MartinHeralecky\Jsonschema\Introspector\TypeParser;
 use MartinHeralecky\Jsonschema\JsonSchemaGenerator;
-use MartinHeralecky\Jsonschema\TypeParser\TypeParser;
 use PHPUnit\Framework\TestCase;
 
 class CompoundTest extends TestCase

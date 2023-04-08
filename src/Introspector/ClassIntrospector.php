@@ -5,7 +5,6 @@ namespace MartinHeralecky\Jsonschema\Introspector;
 use MartinHeralecky\Jsonschema\Attribute;
 use MartinHeralecky\Jsonschema\Cast\JsonToPhpCast;
 use MartinHeralecky\Jsonschema\Cast\PhpToJsonCast;
-use MartinHeralecky\Jsonschema\Exception\IntrospectionException;
 use MartinHeralecky\Jsonschema\Exception\UnknownTypeException;
 use MartinHeralecky\Jsonschema\Schema\BooleanSchema;
 use MartinHeralecky\Jsonschema\Schema\IntegerSchema;
@@ -46,14 +45,14 @@ class ClassIntrospector
 
     /**
      * @param class-string $class
-     * @throws IntrospectionException
+     * @throws IntrospectorException
      */
     public function introspect(string $class): Schema
     {
         try {
             $rc = new ReflectionClass($class);
         } catch (ReflectionException $e) {
-            throw new IntrospectionException("Class does not exist: $class", previous: $e);
+            throw new IntrospectorException("Class does not exist: $class", previous: $e);
         }
 
         $title = $this->getAttribute($rc, Attribute\Title::class)?->getValue();
@@ -69,7 +68,7 @@ class ClassIntrospector
     }
 
     /**
-     * @throws IntrospectionException
+     * @throws IntrospectorException
      */
     private function introspectProperty(ReflectionProperty $prop): Schema
     {
@@ -125,7 +124,7 @@ class ClassIntrospector
     }
 
     /**
-     * @throws IntrospectionException
+     * @throws IntrospectorException
      */
     private function introspectAtomicPropertyType(
         AtomicType $type,
@@ -237,7 +236,7 @@ class ClassIntrospector
     }
 
     /**
-     * @throws IntrospectionException
+     * @throws IntrospectorException
      */
     private function getPropertyDescription(ReflectionProperty $prop): ?string
     {
@@ -254,7 +253,7 @@ class ClassIntrospector
         }
 
         if (count($tags) > 1) {
-            throw new IntrospectionException("Unable to process multiple @var annotations.");
+            throw new IntrospectorException("Unable to process multiple @var annotations.");
         }
 
         $desc = $tags[0]->description;

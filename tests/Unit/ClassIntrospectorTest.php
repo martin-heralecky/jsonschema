@@ -14,13 +14,13 @@ use MartinHeralecky\Jsonschema\Attribute\Name;
 use MartinHeralecky\Jsonschema\Attribute\Type;
 use MartinHeralecky\Jsonschema\Cast\DateTimeCast;
 use MartinHeralecky\Jsonschema\Introspector\ClassIntrospector;
+use MartinHeralecky\Jsonschema\Introspector\TypeParser;
 use MartinHeralecky\Jsonschema\Schema\BooleanSchema;
 use MartinHeralecky\Jsonschema\Schema\IntegerSchema;
 use MartinHeralecky\Jsonschema\Schema\NullSchema;
 use MartinHeralecky\Jsonschema\Schema\ObjectSchema;
 use MartinHeralecky\Jsonschema\Schema\StringSchema;
 use MartinHeralecky\Jsonschema\Schema\UnionSchema;
-use MartinHeralecky\Jsonschema\TypeParser\TypeParser;
 use PHPUnit\Framework\TestCase;
 
 class ClassIntrospectorTest extends TestCase
