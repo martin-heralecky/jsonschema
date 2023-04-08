@@ -8,6 +8,8 @@ use MartinHeralecky\Jsonschema\Type\UnionType;
 use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocNode;
 use PHPStan\PhpDocParser\Ast\Type\ArrayTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
+use PHPStan\PhpDocParser\Ast\Type\TypeNode;
+use PHPStan\PhpDocParser\Ast\Type\UnionTypeNode;
 use PHPStan\PhpDocParser\Lexer\Lexer;
 use PHPStan\PhpDocParser\Parser\ConstExprParser;
 use PHPStan\PhpDocParser\Parser\PhpDocParser;
@@ -56,8 +58,24 @@ class TypeParser
 
         $tag = current($tags);
 
-        $type = $tag->type;
+        return $this->parseTypeNode($tag->type);
+    }
 
+    private function parsePhpDocNode(string $phpDoc): PhpDocNode
+    {
+        $lexer = new Lexer();
+
+        $tokens = $lexer->tokenize($phpDoc);
+        $tokensIt = new TokenIterator($tokens);
+
+        $constExprParser = new ConstExprParser();
+        $parser = new PhpDocParser(new PhpStanTypeParser($constExprParser), $constExprParser);
+
+        return $parser->parse($tokensIt);
+    }
+
+    private function parseTypeNode(TypeNode $type): Type
+    {
         if ($type instanceof IdentifierTypeNode) {
             return new AtomicType($type->name);
         }
@@ -66,16 +84,15 @@ class TypeParser
             $itemType = $type->type;
 
             if ($itemType instanceof IdentifierTypeNode) {
-                return new AtomicType("array", [$itemType->name]);
+                return new AtomicType("array", [new AtomicType($itemType->name)]);
             }
         }
 
-        throw new RuntimeException(sprintf(
-            "Unknown property PhpDoc type %s on %s::%s.",
-            $type,
-            $prop->getDeclaringClass()->getName(),
-            $prop->getName(),
-        ));
+        if ($type instanceof UnionTypeNode) {
+            return new UnionType(array_map($this->parseTypeNode(...), $type->types));
+        }
+
+        throw new RuntimeException("Unknown property PhpDoc type $type.");
     }
 
     /**
@@ -117,18 +134,5 @@ class TypeParser
                 $prop->getName(),
             ));
         }
-    }
-
-    private function parsePhpDocNode(string $phpDoc): PhpDocNode
-    {
-        $lexer = new Lexer();
-
-        $tokens = $lexer->tokenize($phpDoc);
-        $tokensIt = new TokenIterator($tokens);
-
-        $constExprParser = new ConstExprParser();
-        $parser = new PhpDocParser(new PhpStanTypeParser($constExprParser), $constExprParser);
-
-        return $parser->parse($tokensIt);
     }
 }

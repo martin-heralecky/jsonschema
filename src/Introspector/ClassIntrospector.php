@@ -6,18 +6,19 @@ use MartinHeralecky\Jsonschema\Attribute;
 use MartinHeralecky\Jsonschema\Cast\JsonToPhpCast;
 use MartinHeralecky\Jsonschema\Cast\PhpToJsonCast;
 use MartinHeralecky\Jsonschema\Exception\UnknownTypeException;
+use MartinHeralecky\Jsonschema\Schema\ArraySchema;
 use MartinHeralecky\Jsonschema\Schema\BooleanSchema;
 use MartinHeralecky\Jsonschema\Schema\IntegerSchema;
+use MartinHeralecky\Jsonschema\Schema\MixedSchema;
 use MartinHeralecky\Jsonschema\Schema\NullSchema;
 use MartinHeralecky\Jsonschema\Schema\ObjectSchema;
 use MartinHeralecky\Jsonschema\Schema\ObjectSchemaProperty;
 use MartinHeralecky\Jsonschema\Schema\Schema;
 use MartinHeralecky\Jsonschema\Schema\StringSchema;
 use MartinHeralecky\Jsonschema\Schema\UnionSchema;
-use MartinHeralecky\Jsonschema\TypeParser\Type\AtomicType;
-use MartinHeralecky\Jsonschema\TypeParser\Type\Type;
-use MartinHeralecky\Jsonschema\TypeParser\Type\UnionType;
-use MartinHeralecky\Jsonschema\TypeParser\TypeParser;
+use MartinHeralecky\Jsonschema\Type\AtomicType;
+use MartinHeralecky\Jsonschema\Type\Type;
+use MartinHeralecky\Jsonschema\Type\UnionType;
 use MartinHeralecky\Jsonschema\Value;
 use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocChildNode;
 use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocNode;
@@ -67,66 +68,35 @@ class ClassIntrospector
         return new ObjectSchema($title, $description, $class, $properties);
     }
 
-    /**
-     * @throws IntrospectorException
-     */
     private function introspectProperty(ReflectionProperty $prop): Schema
     {
-        $type = $this->getPropertyType($prop);
+        $attrs = $prop->getAttributes();
 
-        $title = $this->getPropertyTitle($prop);
+        $typeAttr = self::pop($attrs, Attribute\Type::class);
+        if ($typeAttr !== null) {
+            $type = new AtomicType($typeAttr->getValue());
+        } else {
+            $type = $this->typeParser->parseProperty($prop);
+        }
+
         $description = $this->getPropertyDescription($prop);
-        $default = $this->getPropertyDefault($prop);
-        $examples = $this->getPropertyExamples($prop);
-        $enum = $this->getPropertyEnumValues($prop);
 
-        $jsonToPhpCast = $this->getAttribute($prop, JsonToPhpCast::class);
-        $phpToJsonCast = $this->getAttribute($prop, PhpToJsonCast::class);
-
-        if ($type instanceof AtomicType) {
-            return $this->introspectAtomicPropertyType(
-                $type,
-                $title,
-                $description,
-                $default,
-                $examples,
-                $enum,
-                $jsonToPhpCast,
-                $phpToJsonCast,
-                $prop,
-            );
+        $defaultAttr = self::pop($attrs, Attribute\DefaultValue::class);
+        if ($defaultAttr !== null) {
+            $default = new Value($defaultAttr->getValue());
+        } else if ($prop->hasDefaultValue()) {
+            $default = new Value($prop->getDefaultValue());
+        } else {
+            $default = null;
         }
 
-        if ($type instanceof UnionType) {
-            $schemas = [];
-            foreach ($type->getTypes() as $t) {
-                $schemas[] = $this->introspectAtomicPropertyType($t, null, null, null, [], [], null, null, $prop);
-            }
+        // todo mozna nepassovat dolu raw Attributes, ale naparsovat a passovat hodnoty (napr. zeshora ItemMaxLength
+        //      kdyz se passne, tak dole uz nedava smysl - tam by melo byt ~Item~MaxLength).
 
-            return new UnionSchema(
-                $schemas,
-                $title,
-                $description,
-                $default,
-                $examples,
-                $enum,
-                $jsonToPhpCast,
-                $phpToJsonCast,
-            );
-        }
-
-        throw new RuntimeException(sprintf(
-            "Unknown type %s on %s::%s.",
-            $type::class,
-            $prop->getDeclaringClass()->getName(),
-            $prop->getName(),
-        ));
+        return $this->createSchema($type, $description, $default, $attrs);
     }
 
-    /**
-     * @throws IntrospectorException
-     */
-    private function introspectAtomicPropertyType(
+    private function introspectAtomicPropertyTypeTmp(
         AtomicType $type,
         ?string $title,
         ?string $description,
@@ -135,82 +105,139 @@ class ClassIntrospector
         array $enumValues,
         ?JsonToPhpCast $jsonToPhpCast,
         ?PhpToJsonCast $phpToJsonCast,
-        ReflectionProperty $prop,
+        ?ReflectionProperty $prop,
     ): Schema {
-        if ($type->getName() === "int") {
-            return new IntegerSchema(
-                $title,
-                $description,
-                $default,
-                $examples,
-                $enumValues,
-                $jsonToPhpCast,
-                $phpToJsonCast,
-                $this->getAttribute($prop, Attribute\Min::class)?->getValue(),
-                $this->getAttribute($prop, Attribute\Max::class)?->getValue(),
-            );
-        }
-
-        if ($type->getName() === "string") {
-            return new StringSchema(
-                $title,
-                $description,
-                $default,
-                $examples,
-                $enumValues,
-                $jsonToPhpCast,
-                $phpToJsonCast,
-            );
-        }
-
-        if ($type->getName() === "bool") {
-            return new BooleanSchema(
-                $title,
-                $description,
-                $default,
-                $examples,
-                $enumValues,
-                $jsonToPhpCast,
-                $phpToJsonCast,
-            );
-        }
-
-        if ($type->getName() === "null") {
-            return new NullSchema(
-                $title,
-                $description,
-                $default,
-                $examples,
-                $enumValues,
-                $jsonToPhpCast,
-                $phpToJsonCast,
-            );
-        }
-
         return $this->introspect($type->getName());
+    }
+
+    /**
+     * @param ReflectionAttribute[] $attrs
+     */
+    private function createSchema(Type $type, ?string $desc, ?Value $default, array $attrs): Schema
+    {
+        $title = self::pop($attrs, Attribute\Title::class)?->getValue();
+        $exampleAttrs = self::popAll($attrs, Attribute\Example::class);
+        $examples = array_map(fn(Attribute\Example $exampleAttr) => $exampleAttr->getValue(), $exampleAttrs);
+        $enum = self::pop($attrs, Attribute\Enum::class)?->getValues() ?? [];
+        $jsonToPhpCast = self::pop($attrs, JsonToPhpCast::class);
+        $phpToJsonCast = self::pop($attrs, PhpToJsonCast::class);
+
+        if ($type instanceof AtomicType) {
+            if ($type->getName() === "int") {
+                return new IntegerSchema(
+                    $title,
+                    $desc,
+                    $default,
+                    $examples,
+                    $enum,
+                    $jsonToPhpCast,
+                    $phpToJsonCast,
+                    self::pop($attrs, Attribute\Min::class)?->getValue(),
+                    self::pop($attrs, Attribute\Max::class)?->getValue(),
+                );
+            }
+
+            if ($type->getName() === "string") {
+                return new StringSchema(
+                    $title,
+                    $desc,
+                    $default,
+                    $examples,
+                    $enum,
+                    $jsonToPhpCast,
+                    $phpToJsonCast,
+                    self::pop($attrs, Attribute\MinLength::class)?->getValue() ?? 0,
+                    null,
+                );
+            }
+
+            if ($type->getName() === "bool") {
+                return new BooleanSchema($title, $desc, $default, $examples, $enum, $jsonToPhpCast, $phpToJsonCast);
+            }
+
+            if ($type->getName() === "null") {
+                return new NullSchema($title, $desc, $default, $examples, $enum, $jsonToPhpCast, $phpToJsonCast);
+            }
+
+            if ($type->getName() === "mixed") {
+                return new MixedSchema($title, $desc, $default, $examples, $enum, $jsonToPhpCast, $phpToJsonCast);
+            }
+
+            if ($type->getName() === "array") {
+                return new ArraySchema(
+                    $this->createSchema($type->getGenericTypes()[0] ?? new AtomicType("mixed"), null, null, []),
+                    $title,
+                    $desc,
+                    $default,
+                    $examples,
+                    $enum,
+                    $jsonToPhpCast,
+                    $phpToJsonCast,
+                    self::pop($attrs, Attribute\MinItems::class)?->getValue() ?? 0,
+                );
+            }
+
+            return $this->introspect($type->getName());
+        }
+
+        if ($type instanceof UnionType) {
+            return new UnionSchema(
+                array_map(fn(Type $t) => $this->createSchema($t, null, null, $attrs), $type->getTypes()),
+                $title,
+                $desc,
+                $default,
+                $examples,
+                $enum,
+                $jsonToPhpCast,
+                $phpToJsonCast,
+            );
+        }
+
+        throw new RuntimeException("Unknown type " . $type::class . ".");
+    }
+
+    /**
+     * @template T
+     * @param ReflectionAttribute[] $attrs
+     * @param class-string<T> $attrClass
+     * @return T|null
+     */
+    private static function pop(array &$attrs, string $attrClass): ?object
+    {
+        foreach ($attrs as $key => $attr) {
+            $inst = $attr->newInstance();
+            if ($inst instanceof $attrClass) {
+                unset($attrs[$key]);
+                return $inst;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @template T
+     * @param ReflectionAttribute[] $attrs
+     * @param class-string<T> $attrClass
+     * @return T[]
+     */
+    private static function popAll(array &$attrs, string $attrClass): array
+    {
+        $res = [];
+
+        foreach ($attrs as $key => $attr) {
+            if ($attr->getName() === $attrClass) {
+                unset($attrs[$key]);
+                $res[] = $attr->newInstance();
+            }
+        }
+
+        return $res;
     }
 
     private function getPropertyName(ReflectionProperty $prop): string
     {
         return $this->getAttribute($prop, Attribute\Name::class)?->getValue() ?? $prop->getName();
-    }
-
-    /**
-     * @throws UnknownTypeException
-     */
-    private function getPropertyType(ReflectionProperty $prop): Type
-    {
-        $typeAttr = $this->getAttribute($prop, Attribute\Type::class);
-        if ($typeAttr !== null) {
-            return new AtomicType($typeAttr->getValue());
-        }
-
-        return $this->typeParser->parseProperty($prop);
-    }
-
-    private function getPropertyTitle(ReflectionProperty $prop): ?string
-    {
-        return $this->getAttribute($prop, Attribute\Title::class)?->getValue();
     }
 
     private function getClassDescription(ReflectionClass $class): ?string
@@ -265,33 +292,6 @@ class ClassIntrospector
         }
 
         return $desc;
-    }
-
-    private function getPropertyDefault(ReflectionProperty $prop): ?Value
-    {
-        $defaultAttr = $this->getAttribute($prop, Attribute\DefaultValue::class);
-        if ($defaultAttr !== null) {
-            return new Value($defaultAttr->getValue());
-        }
-
-        if ($prop->hasDefaultValue()) {
-            return new Value($prop->getDefaultValue());
-        }
-
-        return null;
-    }
-
-    private function getPropertyExamples(ReflectionProperty $prop): array
-    {
-        return array_map(
-            fn(Attribute\Example $attr) => $attr->getValue(),
-            $this->getAttributes($prop, Attribute\Example::class),
-        );
-    }
-
-    private function getPropertyEnumValues(ReflectionProperty $prop): array
-    {
-        return $this->getAttribute($prop, Attribute\Enum::class)?->getValues() ?? [];
     }
 
     /**

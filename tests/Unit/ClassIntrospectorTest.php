@@ -15,8 +15,10 @@ use MartinHeralecky\Jsonschema\Attribute\Type;
 use MartinHeralecky\Jsonschema\Cast\DateTimeCast;
 use MartinHeralecky\Jsonschema\Introspector\ClassIntrospector;
 use MartinHeralecky\Jsonschema\Introspector\TypeParser;
+use MartinHeralecky\Jsonschema\Schema\ArraySchema;
 use MartinHeralecky\Jsonschema\Schema\BooleanSchema;
 use MartinHeralecky\Jsonschema\Schema\IntegerSchema;
+use MartinHeralecky\Jsonschema\Schema\MixedSchema;
 use MartinHeralecky\Jsonschema\Schema\NullSchema;
 use MartinHeralecky\Jsonschema\Schema\ObjectSchema;
 use MartinHeralecky\Jsonschema\Schema\StringSchema;
@@ -62,6 +64,16 @@ class ClassIntrospectorTest extends TestCase
 
                 #[Type("string")]
                 public int $echo;
+
+                public array $foxtrot;
+
+                /** @var string[] */
+                public array $golf;
+
+                /** @var string[]|int */
+                public array $hotel;
+
+                // todo with phpdoc (same, different, generic...)
             };
 
         $schema = $this->introspector->introspect($class::class);
@@ -69,25 +81,40 @@ class ClassIntrospectorTest extends TestCase
 
         $this->assertInstanceOf(IntegerSchema::class, $schema->getProperties()[0]->getSchema());
 
-        $prop = $schema->getProperties()[1]->getSchema();
-        $this->assertInstanceOf(UnionSchema::class, $prop);
-        $this->assertInstanceOf(IntegerSchema::class, $prop->getSchemas()[0]);
-        $this->assertInstanceOf(NullSchema::class, $prop->getSchemas()[1]);
+        $propBravo = $schema->getProperties()[1]->getSchema();
+        $this->assertInstanceOf(UnionSchema::class, $propBravo);
+        $this->assertInstanceOf(IntegerSchema::class, $propBravo->getSchemas()[0]);
+        $this->assertInstanceOf(NullSchema::class, $propBravo->getSchemas()[1]);
 
-        $prop = $schema->getProperties()[2]->getSchema();
-        $this->assertInstanceOf(UnionSchema::class, $prop);
-        $this->assertInstanceOf(StringSchema::class, $prop->getSchemas()[0]);
-        $this->assertInstanceOf(IntegerSchema::class, $prop->getSchemas()[1]);
+        $propCharlie = $schema->getProperties()[2]->getSchema();
+        $this->assertInstanceOf(UnionSchema::class, $propCharlie);
+        $this->assertInstanceOf(StringSchema::class, $propCharlie->getSchemas()[0]);
+        $this->assertInstanceOf(IntegerSchema::class, $propCharlie->getSchemas()[1]);
 
-        $prop = $schema->getProperties()[3]->getSchema();
-        $this->assertInstanceOf(UnionSchema::class, $prop);
-        $this->assertInstanceOf(StringSchema::class, $prop->getSchemas()[0]);
-        $this->assertInstanceOf(IntegerSchema::class, $prop->getSchemas()[1]);
-        $this->assertInstanceOf(BooleanSchema::class, $prop->getSchemas()[2]);
-        $this->assertInstanceOf(NullSchema::class, $prop->getSchemas()[3]);
+        $propDelta = $schema->getProperties()[3]->getSchema();
+        $this->assertInstanceOf(UnionSchema::class, $propDelta);
+        $this->assertInstanceOf(StringSchema::class, $propDelta->getSchemas()[0]);
+        $this->assertInstanceOf(IntegerSchema::class, $propDelta->getSchemas()[1]);
+        $this->assertInstanceOf(BooleanSchema::class, $propDelta->getSchemas()[2]);
+        $this->assertInstanceOf(NullSchema::class, $propDelta->getSchemas()[3]);
 
-        $prop = $schema->getProperties()[4]->getSchema();
-        $this->assertInstanceOf(StringSchema::class, $prop);
+        $propEcho = $schema->getProperties()[4]->getSchema();
+        $this->assertInstanceOf(StringSchema::class, $propEcho);
+
+        $propFoxtrot = $schema->getProperties()[5]->getSchema();
+        $this->assertInstanceOf(ArraySchema::class, $propFoxtrot);
+        $this->assertInstanceOf(MixedSchema::class, $propFoxtrot->getItemSchema());
+
+        $propGolf = $schema->getProperties()[6]->getSchema();
+        $this->assertInstanceOf(ArraySchema::class, $propGolf);
+        $this->assertInstanceOf(StringSchema::class, $propGolf->getItemSchema());
+
+        $propHotel = $schema->getProperties()[7]->getSchema();
+        $this->assertInstanceOf(UnionSchema::class, $propHotel);
+        $propHotelFirst = $propHotel->getSchemas()[0];
+        $this->assertInstanceOf(ArraySchema::class, $propHotelFirst);
+        $this->assertInstanceOf(StringSchema::class, $propHotelFirst->getItemSchema());
+        $this->assertInstanceOf(IntegerSchema::class, $propHotel->getSchemas()[1]);
     }
 
     public function testPropertyDescription(): void
