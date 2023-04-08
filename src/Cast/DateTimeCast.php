@@ -5,7 +5,6 @@ namespace MartinHeralecky\Jsonschema\Cast;
 use Attribute;
 use DateTime;
 use Exception;
-use MartinHeralecky\Jsonschema\Exception\CastException;
 
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class DateTimeCast implements JsonToPhpCast, PhpToJsonCast

@@ -2,8 +2,6 @@
 
 namespace MartinHeralecky\Jsonschema\Cast;
 
-use MartinHeralecky\Jsonschema\Exception\CastException;
-
 interface JsonToPhpCast
 {
     /**
