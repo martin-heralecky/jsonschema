@@ -8,6 +8,8 @@ use MartinHeralecky\Jsonschema\Attribute\Enum;
 use MartinHeralecky\Jsonschema\Attribute\Example;
 use MartinHeralecky\Jsonschema\Attribute\Max;
 use MartinHeralecky\Jsonschema\Attribute\Min;
+use MartinHeralecky\Jsonschema\Attribute\MinItems;
+use MartinHeralecky\Jsonschema\Attribute\MinLength;
 use MartinHeralecky\Jsonschema\Attribute\Name;
 use MartinHeralecky\Jsonschema\Attribute\Type;
 use MartinHeralecky\Jsonschema\Cast\DateTimeCast;
@@ -204,71 +206,140 @@ class ClassIntrospectorTest extends TestCase
     {
         $class =
             new class {
+                public int $alfa;
+
                 #[Example(10)]
                 #[Example(20)]
-                public int $alfa;
+                public int $bravo;
             };
 
         $schema = $this->introspector->introspect($class::class);
         $this->assertInstanceOf(ObjectSchema::class, $schema);
 
-        $prop = $schema->getProperties()[0]->getSchema();
-        $this->assertInstanceOf(IntegerSchema::class, $prop);
-        $this->assertCount(2, $prop->getExamples());
-        $this->assertSame(10, $prop->getExamples()[0]);
-        $this->assertSame(20, $prop->getExamples()[1]);
+        $propAlfa = $schema->getProperties()[0]->getSchema();
+        $this->assertInstanceOf(IntegerSchema::class, $propAlfa);
+        $this->assertCount(0, $propAlfa->getExamples());
+
+        $propBravo = $schema->getProperties()[1]->getSchema();
+        $this->assertInstanceOf(IntegerSchema::class, $propBravo);
+        $this->assertCount(2, $propBravo->getExamples());
+        $this->assertSame(10, $propBravo->getExamples()[0]);
+        $this->assertSame(20, $propBravo->getExamples()[1]);
     }
 
     public function testPropertyEnumValues(): void
     {
         $class =
             new class {
-                #[Enum([10, 20])]
                 public int $alfa;
+
+                #[Enum([10, 20])]
+                public int $bravo;
             };
 
         $schema = $this->introspector->introspect($class::class);
         $this->assertInstanceOf(ObjectSchema::class, $schema);
 
-        $prop = $schema->getProperties()[0]->getSchema();
-        $this->assertInstanceOf(IntegerSchema::class, $prop);
-        $this->assertCount(2, $prop->getEnumValues());
-        $this->assertSame(10, $prop->getEnumValues()[0]);
-        $this->assertSame(20, $prop->getEnumValues()[1]);
+        $propAlfa = $schema->getProperties()[0]->getSchema();
+        $this->assertInstanceOf(IntegerSchema::class, $propAlfa);
+        $this->assertCount(0, $propAlfa->getEnumValues());
+
+        $propBravo = $schema->getProperties()[1]->getSchema();
+        $this->assertInstanceOf(IntegerSchema::class, $propBravo);
+        $this->assertCount(2, $propBravo->getEnumValues());
+        $this->assertSame(10, $propBravo->getEnumValues()[0]);
+        $this->assertSame(20, $propBravo->getEnumValues()[1]);
     }
 
     public function testPropertyMinAndMax(): void
     {
         $class =
             new class {
+                public int $alfa;
+
                 #[Min(10)]
                 #[Max(20)]
-                public int $alfa;
+                public int $bravo;
             };
 
         $schema = $this->introspector->introspect($class::class);
         $this->assertInstanceOf(ObjectSchema::class, $schema);
 
-        $prop = $schema->getProperties()[0]->getSchema();
-        $this->assertInstanceOf(IntegerSchema::class, $prop);
-        $this->assertSame(10, $prop->getMinimum());
-        $this->assertSame(20, $prop->getMaximum());
+        $propAlfa = $schema->getProperties()[0]->getSchema();
+        $this->assertInstanceOf(IntegerSchema::class, $propAlfa);
+        $this->assertSame(null, $propAlfa->getMinimum());
+        $this->assertSame(null, $propAlfa->getMaximum());
+
+        $propBravo = $schema->getProperties()[1]->getSchema();
+        $this->assertInstanceOf(IntegerSchema::class, $propBravo);
+        $this->assertSame(10, $propBravo->getMinimum());
+        $this->assertSame(20, $propBravo->getMaximum());
+    }
+
+    public function testPropertyMinLength(): void
+    {
+        $class =
+            new class {
+                public string $alfa;
+
+                #[MinLength(10)]
+                public string $bravo;
+            };
+
+        $schema = $this->introspector->introspect($class::class);
+        $this->assertInstanceOf(ObjectSchema::class, $schema);
+
+        $propAlfa = $schema->getProperties()[0]->getSchema();
+        $this->assertInstanceOf(StringSchema::class, $propAlfa);
+        $this->assertSame(0, $propAlfa->getMinLength());
+
+        $propBravo = $schema->getProperties()[1]->getSchema();
+        $this->assertInstanceOf(StringSchema::class, $propBravo);
+        $this->assertSame(10, $propBravo->getMinLength());
+    }
+
+    public function testPropertyMinItems(): void
+    {
+        $class =
+            new class {
+                public array $alfa;
+
+                #[MinItems(10)]
+                public array $bravo;
+            };
+
+        $schema = $this->introspector->introspect($class::class);
+        $this->assertInstanceOf(ObjectSchema::class, $schema);
+
+        $propAlfa = $schema->getProperties()[0]->getSchema();
+        $this->assertInstanceOf(ArraySchema::class, $propAlfa);
+        $this->assertSame(0, $propAlfa->getMinItems());
+
+        $propBravo = $schema->getProperties()[1]->getSchema();
+        $this->assertInstanceOf(ArraySchema::class, $propBravo);
+        $this->assertSame(10, $propBravo->getMinItems());
     }
 
     public function testPropertyCast(): void
     {
         $class =
             new class {
+                public string $alfa;
+
                 #[Type("string")]
                 #[DateTimeCast]
-                public DateTime $alfa;
+                public DateTime $bravo;
             };
 
         $schema = $this->introspector->introspect($class::class);
         $this->assertInstanceOf(ObjectSchema::class, $schema);
 
-        $prop = $schema->getProperties()[0]->getSchema();
-        $this->assertInstanceOf(DateTimeCast::class, $prop->getJsonToPhpCast());
-        $this->assertInstanceOf(DateTimeCast::class, $prop->getPhpToJsonCast());
+        $propAlfa = $schema->getProperties()[0]->getSchema();
+        $this->assertSame(null, $propAlfa->getJsonToPhpCast());
+        $this->assertSame(null, $propAlfa->getPhpToJsonCast());
+
+        $propBravo = $schema->getProperties()[1]->getSchema();
+        $this->assertInstanceOf(DateTimeCast::class, $propBravo->getJsonToPhpCast());
+        $this->assertInstanceOf(DateTimeCast::class, $propBravo->getPhpToJsonCast());
     }
 }

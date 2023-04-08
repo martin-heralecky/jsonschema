@@ -19,9 +19,15 @@ class StringSchema extends Schema
         array $enumValues = [],
         ?JsonToPhpCast $jsonToPhpCast = null,
         ?PhpToJsonCast $phpToJsonCast = null,
+        private readonly int $minLength = 0,
         private readonly ?string $pattern = null,
     ) {
         parent::__construct($title, $description, $default, $examples, $enumValues, $jsonToPhpCast, $phpToJsonCast);
+    }
+
+    public function getMinLength(): int
+    {
+        return $this->minLength;
     }
 
     public function getPattern(): ?string

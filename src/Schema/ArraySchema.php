@@ -24,6 +24,7 @@ class ArraySchema extends Schema
         array $enumValues = [],
         ?JsonToPhpCast $jsonToPhpCast = null,
         ?PhpToJsonCast $phpToJsonCast = null,
+        private readonly int $minItems = 0,
     ) {
         parent::__construct($title, $description, $default, $examples, $enumValues, $jsonToPhpCast, $phpToJsonCast);
     }
@@ -34,5 +35,10 @@ class ArraySchema extends Schema
     public function getItemSchema(): Schema
     {
         return $this->itemSchema;
+    }
+
+    public function getMinItems(): int
+    {
+        return $this->minItems;
     }
 }
