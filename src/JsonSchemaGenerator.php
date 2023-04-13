@@ -3,6 +3,7 @@
 namespace MartinHeralecky\Jsonschema;
 
 use InvalidArgumentException;
+use MartinHeralecky\Jsonschema\Schema\ArraySchema;
 use MartinHeralecky\Jsonschema\Schema\BooleanSchema;
 use MartinHeralecky\Jsonschema\Schema\IntegerSchema;
 use MartinHeralecky\Jsonschema\Schema\NullSchema;
@@ -51,6 +52,8 @@ class JsonSchemaGenerator
             $json += $this->generateBooleanSchema($schema);
         } elseif ($schema instanceof NullSchema) {
             $json += $this->generateNullSchema($schema);
+        } elseif ($schema instanceof ArraySchema) {
+            $json += $this->generateArraySchema($schema);
         } elseif ($schema instanceof UnionSchema) {
             $jsons = [];
             foreach ($schema->getSchemas() as $schema) {
@@ -120,6 +123,19 @@ class JsonSchemaGenerator
     private function generateNullSchema(NullSchema $schema): array
     {
         $json = ["type" => "null"];
+
+        return $json;
+    }
+
+    private function generateArraySchema(ArraySchema $schema): array
+    {
+        $json = ["type" => "array"];
+
+        $json["items"] = $this->generate($schema->getItemSchema(), false);
+
+        if ($schema->getMinItems() !== 0) {
+            $json["minItems"] = $schema->getMinItems();
+        }
 
         return $json;
     }

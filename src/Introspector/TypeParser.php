@@ -5,6 +5,8 @@ namespace MartinHeralecky\Jsonschema\Introspector;
 use MartinHeralecky\Jsonschema\Type\AtomicType;
 use MartinHeralecky\Jsonschema\Type\Type;
 use MartinHeralecky\Jsonschema\Type\UnionType;
+use phpDocumentor\Reflection\FqsenResolver;
+use phpDocumentor\Reflection\Types\ContextFactory;
 use PHPStan\PhpDocParser\Ast\PhpDoc\PhpDocNode;
 use PHPStan\PhpDocParser\Ast\Type\ArrayTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
@@ -58,7 +60,7 @@ class TypeParser
 
         $tag = current($tags);
 
-        return $this->parseTypeNode($tag->type);
+        return $this->parseTypeNode($tag->type, $prop);
     }
 
     private function parsePhpDocNode(string $phpDoc): PhpDocNode
@@ -74,7 +76,7 @@ class TypeParser
         return $parser->parse($tokensIt);
     }
 
-    private function parseTypeNode(TypeNode $type): Type
+    private function parseTypeNode(TypeNode $type, ReflectionProperty $prop): Type
     {
         if ($type instanceof IdentifierTypeNode) {
             return new AtomicType($type->name);
@@ -84,12 +86,21 @@ class TypeParser
             $itemType = $type->type;
 
             if ($itemType instanceof IdentifierTypeNode) {
-                return new AtomicType("array", [new AtomicType($itemType->name)]);
+                if (in_array($itemType->name, ["string", "int", "bool", "array", "mixed", "float"], true)) {
+                    $n = $itemType->name;
+                } else {
+                    $cf = new ContextFactory();
+                    $c = $cf->createFromReflector($prop);
+                    $f = new FqsenResolver();
+                    $n = (string)$f->resolve($itemType->name, $c);
+                    $n = ltrim($n, "\\");
+                }
+                return new AtomicType("array", [new AtomicType($n)]); // todo $itemType->name je Condition bez namespacu. podivat se jak resi phpstan
             }
         }
 
         if ($type instanceof UnionTypeNode) {
-            return new UnionType(array_map($this->parseTypeNode(...), $type->types));
+            return new UnionType(array_map($this->parseTypeNode(...), $type->types, array_fill(0, count($type->types), $prop)));
         }
 
         throw new RuntimeException("Unknown property PhpDoc type $type.");

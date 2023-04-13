@@ -23,6 +23,7 @@ use MartinHeralecky\Jsonschema\Schema\NullSchema;
 use MartinHeralecky\Jsonschema\Schema\ObjectSchema;
 use MartinHeralecky\Jsonschema\Schema\StringSchema;
 use MartinHeralecky\Jsonschema\Schema\UnionSchema;
+use MartinHeralecky\Jsonschema\Type\AtomicType;
 use PHPUnit\Framework\TestCase;
 
 class ClassIntrospectorTest extends TestCase

@@ -3,7 +3,9 @@
     "type": "library",
     "require": {
         "php": "^8.1",
-        "phpstan/phpdoc-parser": "^1.4"
+        "phpdocumentor/type-resolver": "^1.6",
+        "phpstan/phpdoc-parser": "^1.4",
+        "symfony/yaml": "^6.2"
     },
     "require-dev": {
         "ext-xdebug": "^3",
