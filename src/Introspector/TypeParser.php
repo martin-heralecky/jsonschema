@@ -101,7 +101,13 @@ class TypeParser
     private function parsePropertyType(ReflectionType $type, ReflectionProperty $prop): Type
     {
         if ($type instanceof ReflectionNamedType) {
-            if ($type->isBuiltin() || class_exists($type->getName())) {
+            if ($type->isBuiltin()) {
+                if ($type->getName() === "array") {
+                    $theType = new AtomicType($type->getName(), [new AtomicType("mixed")]);
+                } else {
+                    $theType = new AtomicType($type->getName());
+                }
+            } else if (class_exists($type->getName()) || interface_exists($type->getName())) {
                 $theType = new AtomicType($type->getName());
             } else {
                 throw new IntrospectorException(sprintf(
