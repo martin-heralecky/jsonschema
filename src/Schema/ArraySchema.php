@@ -8,7 +8,7 @@ use MartinHeralecky\Jsonschema\Value;
 
 /**
  * @template TItem
- * @extends Schema<array<int, mixed>>
+ * @extends Schema<array<int, TItem>>
  */
 class ArraySchema extends Schema
 {
