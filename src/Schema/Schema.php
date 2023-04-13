@@ -8,6 +8,7 @@ use MartinHeralecky\Jsonschema\Value;
 
 /**
  * @template T
+ * @todo Remove setters, add withs and add readonly.
  */
 abstract class Schema
 {
@@ -17,13 +18,13 @@ abstract class Schema
      * @param T[] $enumValues
      */
     public function __construct(
-        private readonly ?string $title = null,
-        private readonly ?string $description = null,
-        private readonly ?Value $default = null,
-        private readonly array $examples = [],
-        private readonly array $enumValues = [],
-        private readonly ?JsonToPhpCast $jsonToPhpCast = null,
-        private readonly ?PhpToJsonCast $phpToJsonCast = null,
+        private ?string $title = null,
+        private ?string $description = null,
+        private ?Value $default = null,
+        private array $examples = [],
+        private array $enumValues = [],
+        private ?JsonToPhpCast $jsonToPhpCast = null,
+        private ?PhpToJsonCast $phpToJsonCast = null,
     ) {
     }
 
@@ -69,5 +70,49 @@ abstract class Schema
     public function getPhpToJsonCast(): ?PhpToJsonCast
     {
         return $this->phpToJsonCast;
+    }
+
+    public function setTitle(?string $title): void
+    {
+        $this->title = $title;
+    }
+
+    public function setDescription(?string $description): void
+    {
+        $this->description = $description;
+    }
+
+    /**
+     * @param Value<T>|null $default
+     */
+    public function setDefault(?Value $default): void
+    {
+        $this->default = $default;
+    }
+
+    /**
+     * @param T[] $examples
+     */
+    public function setExamples(array $examples): void
+    {
+        $this->examples = $examples;
+    }
+
+    /**
+     * @param T[] $enumValues
+     */
+    public function setEnumValues(array $enumValues): void
+    {
+        $this->enumValues = $enumValues;
+    }
+
+    public function setJsonToPhpCast(?JsonToPhpCast $jsonToPhpCast): void
+    {
+        $this->jsonToPhpCast = $jsonToPhpCast;
+    }
+
+    public function setPhpToJsonCast(?PhpToJsonCast $phpToJsonCast): void
+    {
+        $this->phpToJsonCast = $phpToJsonCast;
     }
 }

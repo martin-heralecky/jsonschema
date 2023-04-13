@@ -5,7 +5,6 @@ namespace MartinHeralecky\Jsonschema\Introspector;
 use MartinHeralecky\Jsonschema\Attribute;
 use MartinHeralecky\Jsonschema\Cast\JsonToPhpCast;
 use MartinHeralecky\Jsonschema\Cast\PhpToJsonCast;
-use MartinHeralecky\Jsonschema\Exception\UnknownTypeException;
 use MartinHeralecky\Jsonschema\Schema\ArraySchema;
 use MartinHeralecky\Jsonschema\Schema\BooleanSchema;
 use MartinHeralecky\Jsonschema\Schema\IntegerSchema;
@@ -44,11 +43,13 @@ class ClassIntrospector
     ) {
     }
 
+    // PREDCHOZI POKUSY JSOU V GITU
+
     /**
      * @param class-string $class
      * @throws IntrospectorException
      */
-    public function introspect(string $class): Schema
+    public function introspect0(string $class): Schema
     {
         try {
             $rc = new ReflectionClass($class);
@@ -68,7 +69,7 @@ class ClassIntrospector
         return new ObjectSchema($title, $description, $class, $properties);
     }
 
-    private function introspectProperty(ReflectionProperty $prop): Schema
+    private function introspectProperty0(ReflectionProperty $prop): Schema
     {
         $attrs = $prop->getAttributes();
 
@@ -96,24 +97,10 @@ class ClassIntrospector
         return $this->createSchema($type, $description, $default, $attrs);
     }
 
-    private function introspectAtomicPropertyTypeTmp(
-        AtomicType $type,
-        ?string $title,
-        ?string $description,
-        ?Value $default,
-        array $examples,
-        array $enumValues,
-        ?JsonToPhpCast $jsonToPhpCast,
-        ?PhpToJsonCast $phpToJsonCast,
-        ?ReflectionProperty $prop,
-    ): Schema {
-        return $this->introspect($type->getName());
-    }
-
     /**
      * @param ReflectionAttribute[] $attrs
      */
-    private function createSchema(Type $type, ?string $desc, ?Value $default, array $attrs): Schema
+    private function createSchema0(Type $type, ?string $desc, ?Value $default, array $attrs): Schema
     {
         $title = self::pop($attrs, Attribute\Title::class)?->getValue();
         $exampleAttrs = self::popAll($attrs, Attribute\Example::class);
@@ -197,47 +184,257 @@ class ClassIntrospector
     }
 
     /**
-     * @template T
-     * @param ReflectionAttribute[] $attrs
-     * @param class-string<T> $attrClass
-     * @return T|null
+     * @param class-string $class
+     * @throws IntrospectorException
      */
-    private static function pop(array &$attrs, string $attrClass): ?object
+    public function introspect1(string $class): Schema
     {
-        foreach ($attrs as $key => $attr) {
-            $inst = $attr->newInstance();
-            if ($inst instanceof $attrClass) {
-                unset($attrs[$key]);
-                return $inst;
+        try {
+            $rc = new ReflectionClass($class);
+        } catch (ReflectionException $e) {
+            throw new IntrospectorException("Class does not exist: $class", previous: $e);
+        }
+
+        $title = $this->getAttribute($rc, Attribute\Title::class)?->getValue();
+        $description = $this->getClassDescription($rc);
+
+        $properties = [];
+        foreach ($rc->getProperties() as $prop) {
+            $propSchema = $this->introspectProperty($prop);
+            $properties[] = new ObjectSchemaProperty($this->getPropertyName($prop), $prop->getName(), $propSchema);
+        }
+
+        return new ObjectSchema($title, $description, $class, $properties);
+    }
+
+    private function introspectProperty1(ReflectionProperty $prop): Schema
+    {
+        $attrs = $prop->getAttributes();
+
+        $typeAttr = self::pop($attrs, Attribute\Type::class);
+        if ($typeAttr !== null) {
+            $type = new AtomicType($typeAttr->getValue());
+        } else {
+            $type = $this->typeParser->parseProperty($prop);
+        }
+
+        $description = $this->getPropertyDescription($prop);
+
+        $defaultAttr = self::pop($attrs, Attribute\DefaultValue::class);
+        if ($defaultAttr !== null) {
+            $default = new Value($defaultAttr->getValue());
+        } else if ($prop->hasDefaultValue()) {
+            $default = new Value($prop->getDefaultValue());
+        } else {
+            $default = null;
+        }
+
+        // todo mozna nepassovat dolu raw Attributes, ale naparsovat a passovat hodnoty (napr. zeshora ItemMaxLength
+        //      kdyz se passne, tak dole uz nedava smysl - tam by melo byt ~Item~MaxLength).
+
+        $schema = $this->createSchema($type);
+
+        $title = self::pop($attrs, Attribute\Title::class)?->getValue();
+        $exampleAttrs = self::popAll($attrs, Attribute\Example::class);
+        $examples = array_map(fn(Attribute\Example $exampleAttr) => $exampleAttr->getValue(), $exampleAttrs);
+        $enum = self::pop($attrs, Attribute\Enum::class)?->getValues() ?? [];
+        $jsonToPhpCast = self::pop($attrs, JsonToPhpCast::class);
+        $phpToJsonCast = self::pop($attrs, PhpToJsonCast::class);
+
+        $schema->setTitle($title); // todo concat from original or replace if here (top) not null/empty
+        $schema->setDescription($description); // todo concat from original or replace if here (top) not null/empty
+        $schema->setDefault($default); // todo concat from original or replace if here (top) not null/empty
+        $schema->setExamples($examples); // todo concat from original or replace if here (top) not null/empty
+        $schema->setEnumValues($enum); // todo concat from original or replace if here (top) not null/empty
+        $schema->setJsonToPhpCast($jsonToPhpCast); // todo concat from original or replace if here (top) not null/empty
+        $schema->setPhpToJsonCast($phpToJsonCast); // todo concat from original or replace if here (top) not null/empty
+
+        // override values. property attribute has higher priority than class attribute.
+
+        $minAttr = self::pop($attrs, Attribute\Min::class);
+        if ($minAttr !== null) {
+            if ($schema instanceof IntegerSchema) {
+                $schema->setMinimum($minAttr->getValue());
             }
         }
 
-        return null;
+        $maxAttr = self::pop($attrs, Attribute\Max::class);
+        if ($maxAttr !== null) {
+            if ($schema instanceof IntegerSchema) {
+                $schema->setMaximum($maxAttr->getValue());
+            }
+        }
+
+        $minItemsAttr = self::pop($attrs, Attribute\MinItems::class);
+        if ($minItemsAttr !== null) {
+            if ($schema instanceof ArraySchema) {
+                $schema->setMinItems($minItemsAttr->getValue());
+            }
+        }
+
+        $minLengthAttr = self::pop($attrs, Attribute\MinLength::class);
+        if ($minLengthAttr !== null) {
+            if ($schema instanceof StringSchema) {
+                $schema->setMinLength($minLengthAttr->getValue());
+            }
+        }
+
+        return $schema;
     }
+
+    private function createSchema1(Type $type): Schema
+    {
+        if ($type instanceof AtomicType) {
+            if ($type->getName() === "int") {
+                return new IntegerSchema();
+            }
+
+            if ($type->getName() === "string") {
+                return new StringSchema();
+            }
+
+            if ($type->getName() === "bool") {
+                return new BooleanSchema();
+            }
+
+            if ($type->getName() === "null") {
+                return new NullSchema();
+            }
+
+            if ($type->getName() === "mixed") {
+                return new MixedSchema();
+            }
+
+            if ($type->getName() === "array") {
+                // todo add/concat ItemSchema etc. to item schemas
+                // todo SPIS NE - bude nahore v introspectProperty - tady vubec nemam atributy
+                return new ArraySchema($this->createSchema($type->getGenericTypes()[0]));
+            }
+
+            return $this->introspect($type->getName());
+        }
+
+        if ($type instanceof UnionType) {
+            // todo apply Min, Max etc. to appropriate child schemas (Min, Max to IntegerSchema, MinLength to StringSchema...)
+            // todo SPIS NE - bude nahore v introspectProperty - tady vubec nemam atributy
+            return new UnionSchema(array_map($this->createSchema(...), $type->getTypes()));
+        }
+
+        throw new RuntimeException("Unknown type " . $type::class . ".");
+    }
+
+
+
 
     /**
-     * @template T
-     * @param ReflectionAttribute[] $attrs
-     * @param class-string<T> $attrClass
-     * @return T[]
+     * @param class-string $class
+     * @throws IntrospectorException
      */
-    private static function popAll(array &$attrs, string $attrClass): array
+    public function introspect(string $class): Schema
     {
-        $res = [];
-
-        foreach ($attrs as $key => $attr) {
-            if ($attr->getName() === $attrClass) {
-                unset($attrs[$key]);
-                $res[] = $attr->newInstance();
-            }
-        }
-
-        return $res;
+        return $this->introspectType(new AtomicType($class));
     }
 
-    private function getPropertyName(ReflectionProperty $prop): string
+    public function introspectType(Type $type): Schema
     {
-        return $this->getAttribute($prop, Attribute\Name::class)?->getValue() ?? $prop->getName();
+        if ($type instanceof AtomicType) {
+            if ($type->getName() === "int") {
+                return new IntegerSchema();
+            }
+
+            if ($type->getName() === "string") {
+                return new StringSchema();
+            }
+
+            if ($type->getName() === "bool") {
+                return new BooleanSchema();
+            }
+
+            if ($type->getName() === "null") {
+                return new NullSchema();
+            }
+
+            if ($type->getName() === "mixed") {
+                return new MixedSchema();
+            }
+
+            if ($type->getName() === "array") {
+                return new ArraySchema($this->introspectType($type->getGenericTypes()[0]));
+            }
+
+            try {
+                $rc = new ReflectionClass($type->getName());
+            } catch (ReflectionException $e) {
+                throw new IntrospectorException("Class does not exist: {$type->getName()}", previous: $e);
+            }
+
+            $title = $this->getAttribute($rc, Attribute\Title::class)?->getValue();
+            $description = $this->getClassDescription($rc);
+
+            if ($rc->isInterface()) {
+                $subSchemas = [];
+                foreach (get_declared_classes() as $class) {
+                    if (in_array($rc->getName(), class_implements($class), true)) {
+                        $subSchemas[] = $this->introspectType(new AtomicType($class));
+                    }
+                }
+
+                // todo default, examples, enums...
+                return new UnionSchema($subSchemas, $title, $description);
+            }
+
+            $properties = [];
+            foreach ($rc->getProperties() as $prop) {
+                $properties[] = $this->introspectProperty($prop);
+            }
+
+            // todo ne vzdy ObjectSchema - muze byt #[Min(10)] class Neco implements InlineInteger {}
+            // todo default, examples, enums...
+            return new ObjectSchema($title, $description, $type->getName(), $properties);
+        }
+
+        if ($type instanceof UnionType) {
+            return new UnionSchema(array_map($this->introspectType(...), $type->getTypes()));
+        }
+
+        throw new RuntimeException("Unknown type " . $type::class . ".");
+    }
+
+    private function introspectProperty(ReflectionProperty $prop): ObjectSchemaProperty
+    {
+        $typeAttr = $this->getAttribute($prop, Attribute\Type::class);
+        if ($typeAttr !== null) {
+            $type = new AtomicType($typeAttr->getValue());
+        } else {
+            $type = $this->typeParser->parseProperty($prop);
+        }
+
+        $defaultAttr = $this->getAttribute($prop, Attribute\DefaultValue::class);
+        if ($defaultAttr !== null) {
+            $default = new Value($defaultAttr->getValue());
+        } else if ($prop->hasDefaultValue()) {
+            $default = new Value($prop->getDefaultValue());
+        } else {
+            $default = null;
+        }
+
+        $exampleAttrs = $this->getAttributes($prop, Attribute\Example::class);
+        $examples = array_map(fn(Attribute\Example $exampleAttr) => $exampleAttr->getValue(), $exampleAttrs);
+
+        $enum = $this->getAttribute($prop, Attribute\Enum::class)?->getValues() ?? [];
+
+        $jsonToPhpCast = $this->getAttribute($prop, JsonToPhpCast::class);
+        $phpToJsonCast = $this->getAttribute($prop, PhpToJsonCast::class);
+
+        return new ObjectSchemaProperty(
+            $this->getAttribute($prop, Attribute\Name::class)?->getValue() ?? $prop->getName(),
+            $prop->getName(),
+            $this->introspectType($type),
+            $this->getPropertyDescription($prop),
+            $default,
+            $examples,
+            $enum,
+        );
     }
 
     private function getClassDescription(ReflectionClass $class): ?string
