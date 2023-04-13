@@ -8,7 +8,7 @@ use MartinHeralecky\Jsonschema\Value;
 
 /**
  * @template TItem
- * @extends Schema<array<int, TItem>>
+ * @extends Schema<array<int, mixed>>
  */
 class ArraySchema extends Schema
 {
@@ -24,7 +24,7 @@ class ArraySchema extends Schema
         array $enumValues = [],
         ?JsonToPhpCast $jsonToPhpCast = null,
         ?PhpToJsonCast $phpToJsonCast = null,
-        private int $minItems = 0,
+        private readonly int $minItems = 0,
     ) {
         parent::__construct($title, $description, $default, $examples, $enumValues, $jsonToPhpCast, $phpToJsonCast);
     }
@@ -40,10 +40,5 @@ class ArraySchema extends Schema
     public function getMinItems(): int
     {
         return $this->minItems;
-    }
-
-    public function setMinItems(int $minItems): void
-    {
-        $this->minItems = $minItems;
     }
 }

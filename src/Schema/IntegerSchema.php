@@ -19,8 +19,8 @@ class IntegerSchema extends Schema
         array $enumValues = [],
         ?JsonToPhpCast $jsonToPhpCast = null,
         ?PhpToJsonCast $phpToJsonCast = null,
-        private ?int $minimum = null,
-        private ?int $maximum = null,
+        private readonly ?int $minimum = null,
+        private readonly ?int $maximum = null,
     ) {
         parent::__construct($title, $description, $default, $examples, $enumValues, $jsonToPhpCast, $phpToJsonCast);
     }
@@ -33,15 +33,5 @@ class IntegerSchema extends Schema
     public function getMaximum(): ?int
     {
         return $this->maximum;
-    }
-
-    public function setMinimum(?int $minimum): void
-    {
-        $this->minimum = $minimum;
-    }
-
-    public function setMaximum(?int $maximum): void
-    {
-        $this->maximum = $maximum;
     }
 }
